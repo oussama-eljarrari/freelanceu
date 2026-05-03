@@ -1,7 +1,7 @@
 import { categories } from "./data"
 import { SectionHeading } from "./section-heading"
 
-export function CategoriesSection() {
+export function Categories() {
   return (
     <section
       id="categories"

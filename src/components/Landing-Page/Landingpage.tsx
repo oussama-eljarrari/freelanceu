@@ -1,18 +1,18 @@
-import { CategoriesSection } from "./categories-section"
+import { Categories} from "./Categories"
 import { CallToActionSection } from "./cta-section"
-import { Footer } from "./footer"
-import { HeroSection } from "./hero-section"
-import { HowItWorksSection } from "./how-it-works-section"
-import { Navbar } from "./navbar"
+import { Footer } from "./Footer"
+import { Rightcard } from "./Right-Card"
+import { HowItWorksSection } from "./Steps"
+import { Navbar } from "./Navbar"
 import { StatsSection } from "./stats-section"
 
-export function HomePage() {
+export function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <main>
-        <HeroSection />
-        <CategoriesSection />
+        <Rightcard />
+        <Categories />
         <HowItWorksSection />
         <StatsSection />
         <CallToActionSection />

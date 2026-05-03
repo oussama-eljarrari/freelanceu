@@ -1,20 +1,15 @@
 import {Menu } from "lucide-react"
-
 import { BrandMark } from "./brand-mark"
-
 import { Button } from "@/components/ui/button"
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
 
 export function Navbar() {
+
+
   const links = ["Explore", "How it works", "Categories"]
     const navigate = useNavigate();
-    
-
-  
-
-
 
 
   return (
@@ -35,11 +30,11 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Button variant="outline" asChild onClick={() => navigate("/")}>
+          <Button variant="outline" asChild onClick={() => navigate("/login")}>
             <a>Log in</a>
           </Button>
           <Button asChild >
-            <Link to="/">Sign up</Link>
+            <Link to="/login">Sign up</Link>
           </Button>
         </div>
 

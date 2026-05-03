@@ -1,14 +1,16 @@
-import { HomePage } from "@/components/home-page"
-import { Landing } from "@/components/landing-page/landing"
+import { HomePage } from "@/components/Home-page/home"
+import { LandingPage } from "@/components/Landing-Page/Landingpage"
 import { Routes, Route } from "react-router-dom"
+import { LoginPage } from "./components/Login-Page/Login"
 
 
 export function App() {
   
   return (    
   <Routes>
-      <Route path="/" element={<Landing/>} />
+      <Route path="/" element={<LandingPage/>} />
       <Route path="/home" element={<HomePage/>} />
+      <Route path="/login" element={<LoginPage/>} />
   </Routes>
 
 )}

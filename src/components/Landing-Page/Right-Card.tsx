@@ -3,8 +3,9 @@ import { ArrowUpRight, BadgeCheck, Search, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 import { stats } from "./data"
+import logoFinal from "@/assets/White_background_logo.png"
 
-export function HeroSection() {
+export function Rightcard() {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,_rgba(244,109,42,0.14),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(31,42,74,0.1),_transparent_28%)]" />
@@ -66,10 +67,10 @@ export function HeroSection() {
 
               <div className="mt-14 flex items-end justify-between gap-6">
                 <div>
-                  <p className="text-5xl font-semibold tracking-tight text-white sm:text-6xl">
-                    FU
-                  </p>
-                  <p className="mt-2 max-w-52 text-sm leading-6 text-white/70">
+                  <div className="h-16 w-16 rounded-2xl bg-white/10 overflow-hidden">
+                    <img src={logoFinal} alt="FreelanceU logo" className="h-full w-full object-cover" />
+                  </div>
+                  <p className="mt-4 max-w-52 text-sm leading-6 text-white/70">
                     A simple marketplace interface designed to help people move
                     from browsing to booking faster.
                   </p>
