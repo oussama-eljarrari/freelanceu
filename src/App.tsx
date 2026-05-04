@@ -2,7 +2,9 @@ import { HomePage } from "@/components/Home-page/home"
 import { LandingPage } from "@/components/Landing-Page/Landingpage"
 import { Routes, Route } from "react-router-dom"
 import { LoginPage } from "./components/Login-Page/Login"
-
+import { DashboardPage } from "./components/Dashboard-Page/Dashboard"
+import { ProfilePage } from "./components/Profile-Page/Profile"
+import { AdminDashboard } from "./components/Admin-Page/AdminDashboard"
 
 export function App() {
   
@@ -11,6 +13,9 @@ export function App() {
       <Route path="/" element={<LandingPage/>} />
       <Route path="/home" element={<HomePage/>} />
       <Route path="/login" element={<LoginPage/>} />
+      <Route path="/dashboard" element={<DashboardPage/>} />
+      <Route path="/profile" element={<ProfilePage/>} />
+      <Route path="/admin" element={<AdminDashboard/>} />
   </Routes>
 
 )}
