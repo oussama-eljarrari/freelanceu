@@ -1,4 +1,4 @@
-import { mockDashboardStats, mockOrders, mockCurrentUser } from "@/mocks"
+import { mockDashboardStats, mockOrders } from "@/mocks"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { DollarSign, ClipboardList, CheckCircle, Star, ArrowRight, MoreHorizontal, Clock, CheckCircle2 } from "lucide-react"
 import { Navbar } from "@/components/Landing-Page/Navbar"
@@ -15,14 +15,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useNavigate } from "react-router"
+import { useAuth } from "@/Context/AuthContext"
 
 export function DashboardPage() {
 
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const stats = mockDashboardStats
-  const completedOrders = mockOrders.filter(o => o.freelancerId === mockCurrentUser.id && o.status === "completed")
-  const activeOrders = mockOrders.filter(o => o.freelancerId === mockCurrentUser.id && o.status === "in_progress")
+  const completedOrders = mockOrders.filter(o => o.freelancerId === user?.id && o.status === "completed")
+  const activeOrders = mockOrders.filter(o => o.freelancerId === user?.id && o.status === "in_progress")
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -57,7 +59,7 @@ export function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col space-y-1">
             <h1 className="text-3xl font-bold tracking-tight font-heading">Dashboard</h1>
-            <p className="text-muted-foreground font-sans">Welcome back, {mockCurrentUser.name}! Here's what's happening with your business.</p>
+            <p className="text-muted-foreground font-sans">Welcome back, {user?.name}! Here's what's happening with your business.</p>
           </div>
           <Button onClick={() => navigate("/profile")}>View Public Profile <ArrowRight className="ml-2 h-4 w-4" /></Button>
         </div>
@@ -108,7 +110,7 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-heading">{stats.averageRating}</div>
-              <p className="text-xs text-muted-foreground mt-1">Based on {mockCurrentUser.totalReviews} reviews</p>
+              <p className="text-xs text-muted-foreground mt-1">Based on {user?.totalReviews} reviews</p>
             </CardContent>
           </Card>
         </div>

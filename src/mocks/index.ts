@@ -1,10 +1,11 @@
-import { User, Gig, Order, Review, DashboardStats } from "@/types"
+import type { User, Gig, Order, Review, DashboardStats } from "@/types"
 
 export const mockUsers: User[] = [
   {
     id: "u1",
     name: "Sara Malik",
     email: "sara@example.com",
+    password: "sara123",
     avatar: "https://i.pravatar.cc/150?img=47",
     role: "freelancer",
     bio: "Graphic designer with 5 years of experience in branding and UI.",
@@ -16,6 +17,7 @@ export const mockUsers: User[] = [
     id: "u2",
     name: "Karim Benali",
     email: "karim@example.com",
+    password: "karim123",
     avatar: "https://i.pravatar.cc/150?img=12",
     role: "freelancer",
     bio: "Full-stack developer specialized in React and NestJS.",
@@ -27,6 +29,7 @@ export const mockUsers: User[] = [
     id: "u3",
     name: "Lina Ouhab",
     email: "lina@example.com",
+    password: "lina123",
     avatar: "https://i.pravatar.cc/150?img=23",
     role: "client",
     bio: "Startup founder looking for reliable freelancers.",
@@ -101,6 +104,38 @@ export const mockGigs: Gig[] = [
     tags: ["translation", "french", "arabic"],
     createdAt: "2024-05-20",
   },
+  {
+    id: "g5",
+    sellerId: "u1",
+    seller: mockUsers[0],
+    title: "I will edit your video professionally",
+    description:
+      "Professional video editing with color grading, transitions, and subtitles. YouTube, Reels, and TikTok ready.",
+    category: "Video Editing",
+    price: 80,
+    deliveryDays: 5,
+    rating: 4.8,
+    totalReviews: 52,
+    thumbnail: "https://picsum.photos/seed/video/400/300",
+    tags: ["video", "editing", "youtube"],
+    createdAt: "2024-05-01",
+  },
+  {
+    id: "g6",
+    sellerId: "u2",
+    seller: mockUsers[1],
+    title: "I will write SEO-optimized blog posts for your website",
+    description:
+      "Well-researched, engaging blog content tailored to your niche. Includes keyword research and meta description.",
+    category: "Writing",
+    price: 40,
+    deliveryDays: 3,
+    rating: 4.5,
+    totalReviews: 38,
+    thumbnail: "https://picsum.photos/seed/writing/400/300",
+    tags: ["writing", "seo", "blog"],
+    createdAt: "2024-06-10",
+  },
 ]
 
 export const mockOrders: Order[] = [
@@ -114,7 +149,8 @@ export const mockOrders: Order[] = [
     freelancer: mockUsers[0],
     status: "in_progress",
     price: 50,
-    requirements: "I need a logo for my coffee shop called Brew & Co. Colors: brown and cream.",
+    requirements:
+      "I need a logo for my coffee shop called Brew & Co. Colors: brown and cream.",
     createdAt: "2025-04-20",
     deliveryDeadline: "2025-04-23",
   },
@@ -132,7 +168,22 @@ export const mockOrders: Order[] = [
     createdAt: "2025-03-01",
     deliveryDeadline: "2025-03-15",
   },
+  {
+    id: "o3",
+    gigId: "g3",
+    gig: mockGigs[2],
+    clientId: "u3",
+    client: mockUsers[2],
+    freelancerId: "u1",
+    freelancer: mockUsers[0],
+    status: "pending",
+    price: 30,
+    requirements: "Need 10 Instagram posts for a skincare brand launch.",
+    createdAt: "2025-04-28",
+    deliveryDeadline: "2025-04-30",
+  },
 ]
+
 
 export const mockReviews: Review[] = [
   {
@@ -142,10 +193,23 @@ export const mockReviews: Review[] = [
     authorId: "u3",
     author: mockUsers[2],
     rating: 5,
-    comment: "Karim delivered exactly what I needed. Clean code and great communication throughout.",
+    comment:
+      "Karim delivered exactly what I needed. Clean code and great communication throughout.",
     createdAt: "2025-03-16",
   },
+  {
+    id: "r2",
+    orderId: "o1",
+    gigId: "g1",
+    authorId: "u3",
+    author: mockUsers[2],
+    rating: 5,
+    comment:
+      "Sara's work is stunning. The logo perfectly captured our brand identity.",
+    createdAt: "2025-04-25",
+  },
 ]
+
 
 export const mockDashboardStats: DashboardStats = {
   totalEarnings: 1240,
@@ -153,5 +217,3 @@ export const mockDashboardStats: DashboardStats = {
   completedOrders: 47,
   averageRating: 4.8,
 }
-
-export const mockCurrentUser: User = mockUsers[0]

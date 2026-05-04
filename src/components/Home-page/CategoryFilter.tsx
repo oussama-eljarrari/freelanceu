@@ -1,4 +1,4 @@
-import { mockGigs } from "@/mocks/mocks"
+import { mockGigs } from "@/mocks"
 
 interface CategoryFilterProps {
     selectedCategory: string | null
