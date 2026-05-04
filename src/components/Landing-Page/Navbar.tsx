@@ -1,6 +1,8 @@
 import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield } from "lucide-react"
 import { BrandMark } from "./brand-mark"
 import { Button } from "@/components/ui/button"
+import { SearchBar } from "../Home-page/SearchBar"
+import { useState } from "react";
 import { Link, NavigateFunction, useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import {
@@ -13,12 +15,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User } from "@/types"
-import { use } from "react"
 
 export function Navbar() {
-  const links = ["Explore", "How it works", "Categories"]
+  const links = ["Dashboard", "Messages", "Orders", "Profile"]
   const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState("")
   const { user, isAuthenticated } = useAuth()
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    navigate(`/?search=${encodeURIComponent(query)}`)
+  }
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur">
@@ -56,7 +63,7 @@ export function Navbar() {
 
         <button
           type="button"
-          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-background text-foreground md:hidden"
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-sm md:hidden"
           aria-label="Open navigation menu"
         >
           <Menu className="h-5 w-5" />
@@ -64,6 +71,7 @@ export function Navbar() {
       </div>
     </header>
   )
+
 }
 
 function ProfileCercle({ user }: { user: User }) {
