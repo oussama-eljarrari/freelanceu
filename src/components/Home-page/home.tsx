@@ -1,4 +1,4 @@
-import { mockGigs } from "@/mocks/mocks"
+import { mockGigs } from "@/mocks"
 import { GigCard } from "./GigCard"
 import { SearchBar } from "./SearchBar"
 import { CategoryFilter } from "./CategoryFilter"

@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { mockGigs } from "@/mocks/mocks"
+import { mockGigs } from "@/mocks"
 import { Star, ArrowLeft, Clock, CheckCircle } from "lucide-react"
 import { useState } from "react"
 import { OrderPopup } from "./OrderPopup"

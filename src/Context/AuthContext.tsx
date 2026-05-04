@@ -10,14 +10,14 @@
 //   - useContext    → consumed by useAuth() below
 //   - createContext → creates the shared auth state
 //
-// PHASE 1: Uses initCurrentUser (no real API)
+// PHASE 1: Uses mockCurrentUser (no real API)
 // PHASE 2 (M1 task): Replace login() body with real fetch() to NestJS
 // ============================================================
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
-import type { User } from "@/Types/typesindex"
-import { initCurrentUser, initUsers } from "@/Mocks/initdata"
+import type { User } from "@/types"
+import { mockUsers } from "@/mocks"
 
 // ------------------------------------------------------------
 // 1. CREATE THE CONTEXT
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (savedToken) {
       // PHASE 1: token found → restore mock user
       setToken(savedToken)
-      setUser(initCurrentUser)
+      setUser(mockUsers[0])
     }
   }, [])
 
@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Please enter both email and password")
     }
 
-    const matchedUser = initUsers.find(
+    const matchedUser = mockUsers.find(
       (user) => user.email === email && user.password === password
     )
 
