@@ -1,5 +1,5 @@
 import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield } from "lucide-react"
-import { BrandMark } from "./brand-mark"
+import { BrandMark } from "./BrandMark"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "../Home-page/SearchBar"
 import { useState } from "react";
@@ -17,6 +17,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User } from "@/types"
 
 export function Navbar() {
+
+  const navLinks = [
+  { label: "Explore", href: "#top" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Categories", href: "#categories" },
+]
+
+
   const links = ["Dashboard", "Messages", "Orders", "Profile"]
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
@@ -35,15 +43,15 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          {!isAuthenticated ? links.map((link, index) => (
-            <Link
-              key={link}
-              to="/home"
+           {navLinks.map((link, index) => (
+            <a
+              key={link.label}
+              href={link.href}
               className={`text-sm font-medium transition-colors hover:text-foreground ${index === 0 ? "text-foreground" : "text-muted-foreground"}`}
             >
-              {link}
-            </Link>
-          )) : null}
+              {link.label}
+            </a>
+          ))}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">

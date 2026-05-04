@@ -6,6 +6,7 @@ import { DashboardPage } from "./components/Dashboard-Page/Dashboard"
 import { ProfilePage } from "./components/Profile-Page/Profile"
 import { AdminDashboard } from "./components/Admin-Page/AdminDashboard"
 import { GigDetailPage } from "./components/Home-page/GigDetailPage"
+import { SignupPage } from "./components/Signup-page/Signup"
 
 export function App() {
 
@@ -18,7 +19,9 @@ export function App() {
       <Route path="/dashboard" element={<DashboardPage/>} />
       <Route path="/profile" element={<ProfilePage/>} />
       <Route path="/admin" element={<AdminDashboard/>} />
-    </Routes>
+        <Route path="/signup" element={<SignupPage/>} />
+      
+  </Routes>
 
   )
 }
