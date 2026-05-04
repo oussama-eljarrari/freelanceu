@@ -1,6 +1,6 @@
 import { ArrowUpRight, Code2, Star } from "lucide-react"
 
-import { BrandMark } from "./brand-mark"
+import { BrandMark } from "@/components/Landing-Page/BrandMark"
 
 export function Footer() {
   const links = ["About", "Categories", "How it works", "Contact"]

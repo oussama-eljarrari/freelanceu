@@ -2,6 +2,7 @@ import { HomePage } from "@/components/Home-page/home"
 import { LandingPage } from "@/components/Landing-Page/Landingpage"
 import { Routes, Route } from "react-router-dom"
 import { LoginPage } from "./components/Login-Page/Login"
+import { SignupPage } from "./components/Signup-page/Signup"
 
 
 export function App() {
@@ -11,6 +12,8 @@ export function App() {
       <Route path="/" element={<LandingPage/>} />
       <Route path="/home" element={<HomePage/>} />
       <Route path="/login" element={<LoginPage/>} />
+      <Route path="/signup" element={<SignupPage/>} />
+      
   </Routes>
 
 )}
