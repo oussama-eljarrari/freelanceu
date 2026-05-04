@@ -11,7 +11,7 @@ export function App() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/gig/:id" element={<GigDetailPage />} />
+      
     </Routes>
 
   )
