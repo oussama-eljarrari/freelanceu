@@ -1,5 +1,5 @@
 import { X, Wallet, CreditCard, DollarSign } from "lucide-react"
-import { Gig } from "@/types/types"
+import { Gig } from "@/types"
 import { useState } from "react"
 
 interface OrderPopupProps {

@@ -1,4 +1,4 @@
-import { Gig } from "@/types/types"
+import { Gig } from "@/types"
 import { Star } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 

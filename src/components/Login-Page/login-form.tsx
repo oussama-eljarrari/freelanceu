@@ -160,7 +160,7 @@ function LoginSideImage() {
 }
 
 export function LoginForm(props: ComponentProps<"div">) {
-  
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
