@@ -2,7 +2,6 @@ import { mockUsers, mockGigs, mockOrders } from "@/mocks"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LayoutList, ShoppingCart, Trash2 } from "lucide-react"
-import { Navbar } from "@/components/Landing-Page/Navbar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 export function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
+     
       <div className="container mx-auto max-w-7xl p-6 space-y-8">
         
         <div className="flex flex-col space-y-2">

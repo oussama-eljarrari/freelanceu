@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Star, MapPin, Calendar, Briefcase, Edit, Share2 } from "lucide-react"
-import { Navbar } from "@/components/Landing-Page/Navbar"
+
 import { useAuth } from "@/Context/AuthContext"
 
 export function ProfilePage() {
@@ -15,7 +15,7 @@ export function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
+
       <div className="container mx-auto max-w-5xl p-6 space-y-8">
 
         {/* Profile Header */}

@@ -3,7 +3,7 @@ import { GigCard } from "./GigCard"
 import { SearchBar } from "./SearchBar"
 import { CategoryFilter } from "./CategoryFilter"
 import { useState, useMemo } from "react"
-import { Navbar } from "../Landing-Page/Navbar"
+
 
 export function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -25,7 +25,7 @@ export function HomePage() {
   return (
     <div className="relative min-h-screen bg-background px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-      <Navbar />
+      
 
       <div className="mx-auto mt-8 max-w-7xl">
         <div className="mb-8 rounded-2xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur sm:p-8">
