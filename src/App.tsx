@@ -7,6 +7,8 @@ import { ProfilePage } from "./components/Profile-Page/Profile"
 import { AdminDashboard } from "./components/Admin-Page/AdminDashboard"
 import { GigDetailPage } from "./components/Home-page/GigDetailPage"
 import { SignupPage } from "./components/Signup-page/Signup"
+import OrdersPage from "./components/Orders/OrdersPage"
+import CreateGigPage from "./components/Gig/CreateGig"
 
 export function App() {
 
@@ -20,6 +22,8 @@ export function App() {
       <Route path="/profile" element={<ProfilePage/>} />
       <Route path="/admin" element={<AdminDashboard/>} />
         <Route path="/signup" element={<SignupPage/>} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/gig/create" element={<CreateGigPage />} />
       
   </Routes>
 
