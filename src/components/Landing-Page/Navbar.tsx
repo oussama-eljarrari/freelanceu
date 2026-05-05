@@ -19,10 +19,10 @@ import { User } from "@/types"
 export function Navbar() {
 
   const navLinks = [
-  { label: "Explore", href: "#top" },
-  { label: "How it works", href: "#how-it-works" },
-  { label: "Categories", href: "#categories" },
-]
+    { label: "Explore", href: "#top" },
+    { label: "How it works", href: "#how-it-works" },
+    { label: "Categories", href: "#categories" },
+  ]
 
 
   const links = ["Dashboard", "Messages", "Orders", "Profile"]
@@ -38,12 +38,12 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/">
+        <Link to="/home" className="flex items-center gap-2">
           <BrandMark />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-           {navLinks.map((link, index) => (
+          {!isAuthenticated && navLinks.map((link, index) => (
             <a
               key={link.label}
               href={link.href}
@@ -51,6 +51,15 @@ export function Navbar() {
             >
               {link.label}
             </a>
+          ))}
+          {isAuthenticated && links.map((link) => (
+            <Link
+              key={link}
+              to={`/${link.toLowerCase()}`}
+              className="text-sm font-medium transition-colors hover:text-foreground text-muted-foreground"
+            >
+              {link}
+            </Link>
           ))}
         </nav>
 

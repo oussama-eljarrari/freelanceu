@@ -9,23 +9,27 @@ import { GigDetailPage } from "./components/Home-page/GigDetailPage"
 import { SignupPage } from "./components/Signup-page/Signup"
 import OrdersPage from "./components/Orders/OrdersPage"
 import CreateGigPage from "./components/Gig/CreateGig"
+import { Layout } from "./components/Layout"
+import { NotFound } from "./components/NotFound"
 
 export function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/home" element={<HomePage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/gig/:id" element={<GigDetailPage />} />
-      <Route path="/dashboard" element={<DashboardPage/>} />
-      <Route path="/profile" element={<ProfilePage/>} />
-      <Route path="/admin" element={<AdminDashboard/>} />
-        <Route path="/signup" element={<SignupPage/>} />
+      <Route element={<Layout />} >
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/gig/:id" element={<GigDetailPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/gig/create" element={<CreateGigPage />} />
-      
-  </Routes>
+      </Route>
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
 
   )
 }
