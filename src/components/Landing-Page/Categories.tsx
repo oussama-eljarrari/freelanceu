@@ -29,9 +29,7 @@ export function Categories() {
                 <p className="mt-5 text-lg font-semibold text-foreground">
                   {category.name}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Clear service paths for buyers and freelancers.
-                </p>
+                
               </div>
             )
           })}

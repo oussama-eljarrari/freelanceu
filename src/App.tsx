@@ -11,6 +11,7 @@ import OrdersPage from "./components/Orders/OrdersPage"
 import CreateGigPage from "./components/Gig/CreateGig"
 import { Layout } from "./components/Layout"
 import { NotFound } from "./components/NotFound"
+import { Protected } from "./components/Protected"
 
 export function App() {
 
@@ -18,13 +19,17 @@ export function App() {
     <Routes>
       <Route element={<Layout />} >
         <Route path="/" element={<LandingPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/gig/:id" element={<GigDetailPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/orders" element={<OrdersPage />} />
-        <Route path="/gig/create" element={<CreateGigPage />} />
+
+        <Route element={<Protected />} >
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/gig/:id" element={<GigDetailPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/gig/create" element={<CreateGigPage />} />
+        </Route>
+
       </Route>
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/login" element={<LoginPage />} />

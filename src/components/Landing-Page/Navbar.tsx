@@ -92,6 +92,7 @@ export function Navbar() {
 }
 
 function ProfileCercle({ user }: { user: User }) {
+  const { logout } = useAuth()
 
   const navigate = useNavigate()
 
@@ -131,7 +132,7 @@ function ProfileCercle({ user }: { user: User }) {
         </DropdownMenuItem>
       )}
       <DropdownMenuSeparator />
-      <DropdownMenuItem onClick={() => navigate("/login")}>
+      <DropdownMenuItem onClick={() => logout()}>
         <LogOut className="mr-2 h-4 w-4" />
         <span>Log out</span>
       </DropdownMenuItem>
