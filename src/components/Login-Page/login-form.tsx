@@ -192,7 +192,7 @@ export function LoginForm(props: ComponentProps<"div">) {
                 <Field
                   id="email"
                   label="Email"
-                  type="email"
+                  // type="email"
                   placeholder="m@example.com"
                   value={email}
                   onChange={setEmail}
