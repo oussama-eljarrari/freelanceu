@@ -7,6 +7,7 @@ import { api } from "@/api/client"
 type AuthContextValue = {
   user: User | null
   isAuthenticated: boolean
+  isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
 }
@@ -17,17 +18,21 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-
+  const [isLoading, setIsLoading] = useState(true)
 
   const navigate = useNavigate()
 
   useEffect(() => {
     async function checkAuth() {
-     
-      const user = await api.get<User>("/auth/me")
-
-      setUser(user)
-
+      try {
+        const user = await api.get<User>("/auth/me")
+        setUser(user)
+      } catch (error) {
+        // Handle unauthenticated state or error
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
     }
     checkAuth()
   }, [])
@@ -60,10 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api.post("/auth/logout")
     navigate("/login")
   }
-
+  
 
   const value: AuthContextValue = {
     user, isAuthenticated: user !== null,
+    isLoading,
     login,
     logout,
   }
