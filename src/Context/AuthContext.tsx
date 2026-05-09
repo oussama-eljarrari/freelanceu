@@ -9,6 +9,7 @@ type AuthContextValue = {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  signup:(name: string, email: string , password:string)=> Promise<void>
   logout: () => void
 }
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -38,7 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
 
-  async function login(email: string, password: string) {
+  async function login(email: string, password: string) 
+  {
     if (!email || !password) {
       throw new Error("Please enter both email and password")
     }
@@ -58,8 +61,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Ali - added signup function to handle user registration
+  async function signup(name: string, email: string , password: string) 
+  {
+    
+    // checking if the form iz correctly filled
 
-  async function logout() {
+    if (!name || !email || !password) {
+      throw new Error("Please enter name, email and password")
+    } 
+
+    try
+    {
+      const res = await api.post<{ user?: User;message?: string }>("/auth/signup", { name, email, password })
+      const user = res.user
+      if (!user) {
+        throw new Error(res.message ?? "User already exists")
+      }
+      setUser(user)
+      navigate("/home")
+
+    }catch(err: any){
+      throw new Error(err.message || "Failed to signup")
+    }
+    
+  }
+
+
+  async function logout() 
+  {
 
     setUser(null)
     await api.post("/auth/logout")
@@ -72,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     login,
     logout,
+    signup
   }
 
   return (

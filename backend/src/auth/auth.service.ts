@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
+import { SignupDto } from './dto/signup.dto';
+
 
 @Injectable()
 export class AuthService {
@@ -19,15 +21,16 @@ export class AuthService {
         return null;
     }
 
-    async signup(authCredentialsDto: AuthCredentialsDto) {
-        const { username, password } = authCredentialsDto;
-        const existingUser = this.usersService.findOne(username);
+    async signup(signupDto: SignupDto) {
+        const { name, password , email } = signupDto;
+        const existingUser = this.usersService.findOne(email);
 
         if (existingUser) {
+
             return null;
         }
 
-        return this.usersService.create(username, password);
+        return this.usersService.create({name, password, email});
     }
 
 }

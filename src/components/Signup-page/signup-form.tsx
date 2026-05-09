@@ -1,8 +1,9 @@
 import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { BrandMark } from "@/components/Landing-Page/BrandMark"
 import loginSide from "@/assets/login-side.png"
+import { useAuth } from "@/Context/AuthContext"
 
 const inputClassName =
   "flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
@@ -10,18 +11,14 @@ const inputClassName =
 export function SignupForm() {
 
   const [fullName, setFullName] = useState("")
-
   const [email, setEmail] = useState("")
-
   const [password, setPassword] = useState("")
-
   const [confirmPassword, setConfirmPassword] = useState("")
-
   const [error, setError] = useState<string | null>(null)
 
-  const navigate = useNavigate()
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const { signup } = useAuth()
+  
+  const handleSubmit = async (event: React.FormEvent) => {
 
     event.preventDefault()
 
@@ -35,8 +32,12 @@ export function SignupForm() {
       return
     }
 
-    setError(null)
-    navigate("/login")
+
+    try {
+      await signup(fullName, email, password)
+    } catch (error: any) {
+      setError(error.message || "Failed to create account")
+    }
   }
 
   return (

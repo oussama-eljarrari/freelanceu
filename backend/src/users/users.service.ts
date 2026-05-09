@@ -52,21 +52,45 @@ export class UsersService {
         return this.users;
     }
 
-    create(username: string, password: string): Omit<User, 'password'> {
+    create({ name, email, password }: { name: string; email: string; password: string }): Omit<User, "password"> 
+    {
+        const createdAt = new Date()
+        const joinedAt = createdAt.toISOString().slice(0, 10)
+
+        const roles = ["client", "freelancer"] as const
+        const role = roles[Math.floor(Math.random() * roles.length)]
+
+        const bioOptions = [
+            "New on the platform and excited to get started.",
+            "Open to new collaborations and projects.",
+            "Passionate about delivering great results.",
+        ]
+        const bio = bioOptions[Math.floor(Math.random() * bioOptions.length)]
+
+        const rating = Number((Math.random() * 2 + 3).toFixed(1)) // 3.0 - 5.0
+        const totalReviews = Math.floor(Math.random() * 50)
+
         const user: User = {
             id: Math.random().toString(36).substring(2, 9),
-            username,
+            name,
+            email,
+            username: email, // login uses email
             password,
-            createdAt: new Date(),
-        };
-        this.users.push(user);
-        console.log(this.users
-        );
-        const { password: _, ...result } = user;
+            avatar: `https://i.pravatar.cc/150?u=${encodeURIComponent(email)}`,
+            role,
+            bio,
+            joinedAt,
+            rating,
+            totalReviews,
+            createdAt,
+        }
+
+        this.users.push(user)
+        const { password: _, ...result } = user
         return result;
     }
 
-    findOne(username: string): User | undefined {
-        return this.users.find(user => user.username === username);
+    findOne(email: string): User | undefined {
+        return this.users.find(user => user.email === email);
     }
 }
