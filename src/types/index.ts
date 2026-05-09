@@ -67,6 +67,20 @@ export interface Review {
   createdAt: string
 }
 
+export interface Message {
+  id: string
+  gigId: string
+  sellerId: string
+  sellerEmail: string
+  clientId: string | null
+  clientEmail: string
+  senderId: string | null
+  senderEmail: string
+  subject: string
+  body: string
+  createdAt: string
+}
+
 export interface AuthState {
   user: User | null
   isAuthenticated: boolean

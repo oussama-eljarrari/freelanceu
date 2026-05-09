@@ -2,8 +2,8 @@ import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield } from "lucide-
 import { BrandMark } from "./BrandMark"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "../Home-page/SearchBar"
-import { useState } from "react";
-import { Link, NavigateFunction, useNavigate } from "react-router-dom"
+import { useEffect, useState } from "react";
+import { Link, NavigateFunction, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "@/hooks/useAuth"
 import {
   DropdownMenu,
@@ -14,7 +14,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User } from "@/types"
+import { api } from "@/api/client"
+import { User, type Message } from "@/types"
 
 export function Navbar() {
 
@@ -27,13 +28,74 @@ export function Navbar() {
 
   const links = ["Dashboard", "Messages", "Orders", "Profile"]
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchQuery, setSearchQuery] = useState("")
   const { user, isAuthenticated } = useAuth()
+  const [messageCount, setMessageCount] = useState(0)
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
     navigate(`/?search=${encodeURIComponent(query)}`)
   }
+
+  const getLastSeenKey = () => {
+    if (user?.id) {
+      return `messages:lastSeen:${user.id}`
+    }
+    if (user?.email) {
+      return `messages:lastSeen:${user.email}`
+    }
+    return "messages:lastSeen:anonymous"
+  }
+
+  const markMessagesAsSeen = () => {
+    if (!user) {
+      return
+    }
+    localStorage.setItem(getLastSeenKey(), new Date().toISOString())
+    setMessageCount(0)
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      setMessageCount(0)
+      return
+    }
+
+    const fetchMessages = async () => {
+      try {
+        if (location.pathname === "/messages") {
+          markMessagesAsSeen()
+          return
+        }
+        const params = new URLSearchParams()
+        params.set("userId", user.id)
+        if (user.email) {
+          params.set("email", user.email)
+        }
+        const res = await api.get<{ data: Message[] }>(`/messages?${params.toString()}`)
+        const lastSeenRaw = localStorage.getItem(getLastSeenKey())
+        const lastSeen = lastSeenRaw ? new Date(lastSeenRaw).getTime() : 0
+        const incoming = (res.data ?? [])
+          .filter((message) => message.senderId !== user.id && message.senderEmail !== user.email)
+          .filter((message) => new Date(message.createdAt).getTime() > lastSeen)
+          .length
+        setMessageCount(incoming)
+      } catch {
+        // Keep last count if fetch fails.
+      }
+    }
+
+    fetchMessages()
+    const intervalId = window.setInterval(fetchMessages, 15000)
+    return () => window.clearInterval(intervalId)
+  }, [isAuthenticated, user, location.pathname])
+
+  useEffect(() => {
+    if (location.pathname === "/messages") {
+      markMessagesAsSeen()
+    }
+  }, [location.pathname, user])
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur">
@@ -58,7 +120,14 @@ export function Navbar() {
               to={`/${link.toLowerCase()}`}
               className="text-sm font-medium transition-colors hover:text-foreground text-muted-foreground"
             >
-              {link}
+              <span className="relative inline-flex items-center">
+                {link}
+                {link === "Messages" && messageCount > 0 && (
+                  <span className="ml-2 inline-flex min-w-[18px] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                    {messageCount > 99 ? "99+" : messageCount}
+                  </span>
+                )}
+              </span>
             </Link>
           ))}
         </nav>

@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Star, MapPin, Calendar, Briefcase, Edit, Share2 } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 import { useAuth } from "@/Context/AuthContext"
 
 export function ProfilePage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const userGigs = mockGigs.filter(g => g.sellerId === user?.id)
   const userReviews = mockReviews.filter(r => r.authorId === user?.id || mockGigs.find(g => g.id === r.gigId)?.sellerId === user?.id) // simplistic assumption for mock
 
@@ -102,7 +104,9 @@ export function ProfilePage() {
                       <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider">Starting at</p>
                       <p className="text-xl font-bold text-primary">${gig.price}</p>
                     </div>
-                    <Button variant="outline" className="w-full">View Gig</Button>
+                    <Button variant="outline" className="w-full" onClick={() => navigate(`/gig/${gig.id}`)}>
+                      View Gig
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
