@@ -4,7 +4,9 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev:client": "vite",
+    "dev:server": "cd backend && pnpm start:dev",
+    "dev": "concurrently \"pnpm dev:client\" \"pnpm dev:server\"",
     "build": " vite build",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",

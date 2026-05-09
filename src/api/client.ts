@@ -21,12 +21,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   get: <T>(url: string) => request<T>(url, { method: 'GET' }),
-  
-  post: <T>(url: string, data?: any) => request<T>(url, { 
-    method: 'POST', 
-    body: JSON.stringify(data) 
+
+  post: <T>(url: string, data?: any) => request<T>(url, {
+    method: 'POST',
+    body: JSON.stringify(data)
   }),
-  
+
+  patch: <T>(url: string, data?: any) => request<T>(url, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  }),
+
+  delete: <T>(url: string) => request<T>(url, { method: 'DELETE' }),
+
 };
 
 

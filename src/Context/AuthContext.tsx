@@ -9,7 +9,8 @@ type AuthContextValue = {
   isAuthenticated: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup:(name: string, email: string , password:string)=> Promise<void>
+  signup: (name: string, email: string, password: string) => Promise<void>
+  updateUser: (data: Partial<User>) => Promise<void>
   logout: () => void
 }
 
@@ -40,8 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
 
-  async function login(email: string, password: string) 
-  {
+  async function login(email: string, password: string) {
     if (!email || !password) {
       throw new Error("Please enter both email and password")
     }
@@ -62,18 +62,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // Ali - added signup function to handle user registration
-  async function signup(name: string, email: string , password: string) 
-  {
-    
+  async function signup(name: string, email: string, password: string) {
+
     // checking if the form iz correctly filled
 
     if (!name || !email || !password) {
       throw new Error("Please enter name, email and password")
-    } 
+    }
 
-    try
-    {
-      const res = await api.post<{ user?: User;message?: string }>("/auth/signup", { name, email, password })
+    try {
+      const res = await api.post<{ user?: User; message?: string }>("/auth/signup", { name, email, password })
       const user = res.user
       if (!user) {
         throw new Error(res.message ?? "User already exists")
@@ -81,28 +79,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(user)
       navigate("/home")
 
-    }catch(err: any){
+    } catch (err: any) {
       throw new Error(err.message || "Failed to signup")
     }
-    
+
   }
 
 
-  async function logout() 
-  {
+  async function logout() {
 
     setUser(null)
     await api.post("/auth/logout")
     navigate("/login")
   }
-  
+
+  async function updateUser(data: Partial<User>) {
+    try {
+      const updatedUser = await api.patch<User>("/users/profile", data)
+      setUser(updatedUser)
+    } catch (err: any) {
+      throw new Error(err.message || "Failed to update profile")
+    }
+  }
+
 
   const value: AuthContextValue = {
     user, isAuthenticated: user !== null,
     isLoading,
     login,
     logout,
-    signup
+    signup,
+    updateUser
   }
 
   return (

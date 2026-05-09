@@ -52,8 +52,7 @@ export class UsersService {
         return this.users;
     }
 
-    create({ name, email, password }: { name: string; email: string; password: string }): Omit<User, "password"> 
-    {
+    create({ name, email, password }: { name: string; email: string; password: string }): Omit<User, "password"> {
         const createdAt = new Date()
         const joinedAt = createdAt.toISOString().slice(0, 10)
 
@@ -92,5 +91,18 @@ export class UsersService {
 
     findOne(email: string): User | undefined {
         return this.users.find(user => user.email === email);
+    }
+
+    update(id: string, updateData: Partial<User>): User | undefined {
+        const userIndex = this.users.findIndex(user => user.id === id);
+        if (userIndex === -1) return undefined;
+
+        this.users[userIndex] = {
+            ...this.users[userIndex],
+            ...updateData,
+        };
+
+        const { password, ...result } = this.users[userIndex];
+        return this.users[userIndex];
     }
 }
