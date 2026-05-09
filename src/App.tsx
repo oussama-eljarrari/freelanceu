@@ -9,6 +9,7 @@ import { GigDetailPage } from "./components/Home-page/GigDetailPage"
 import { SignupPage } from "./components/Signup-page/Signup"
 import OrdersPage from "./components/Orders/OrdersPage"
 import CreateGigPage from "./components/Gig/CreateGig"
+import { MessagesPage } from "./components/Messages/MessagesPage"
 import { Layout } from "./components/Layout"
 import { NotFound } from "./components/NotFound"
 import { Protected } from "./components/Protected"
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/messages" element={<MessagesPage />} />
           <Route path="/gig/create" element={<CreateGigPage />} />
         </Route>
 

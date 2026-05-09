@@ -3,12 +3,14 @@ import { mockGigs } from "@/mocks"
 import { Star, ArrowLeft, Clock, CheckCircle } from "lucide-react"
 import { useState } from "react"
 import { OrderPopup } from "./OrderPopup"
+import { ContactSellerPopup } from "./ContactSellerPopup"
 
 export function GigDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
     const gig = mockGigs.find((g) => g.id === id)
     const [showOrderPopup, setShowOrderPopup] = useState(false)
+    const [showContactPopup, setShowContactPopup] = useState(false)
 
     if (!gig) {
         return (
@@ -132,7 +134,10 @@ export function GigDetailPage() {
                                 Continue
                             </button>
 
-                            <button className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                            <button
+                                onClick={() => setShowContactPopup(true)}
+                                className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                            >
                                 Contact Seller
                             </button>
                         </div>
@@ -165,7 +170,7 @@ export function GigDetailPage() {
                                 </p>
                             </div>
 
-                            <button className="w-full border border-border text-foreground font-medium py-2 rounded-lg hover:bg-background transition-colors">
+                            <button className="w-full border border-border text-foreground font-medium py-2 rounded-lg hover:bg-background transition-colors" onClick={() => { navigate('/profile') }}>
                                 View Profile
                             </button>
                         </div>
@@ -175,6 +180,9 @@ export function GigDetailPage() {
 
             {/* Order Popup */}
             {showOrderPopup && <OrderPopup gig={gig} onClose={() => setShowOrderPopup(false)} />}
+            {showContactPopup && (
+                <ContactSellerPopup gig={gig} onClose={() => setShowContactPopup(false)} />
+            )}
         </div>
     )
 }
