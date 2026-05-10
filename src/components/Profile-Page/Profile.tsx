@@ -4,16 +4,59 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Star, MapPin, Calendar, Briefcase, Edit, Share2 } from "lucide-react"
+import { Star, MapPin, Calendar, Briefcase, Edit, Share2, Clipboard, Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
 
 import { useAuth } from "@/Context/AuthContext"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import Twitter from './Twitter'
+import Linkedin from './Linkedin'
 
 export function ProfilePage() {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const navigate = useNavigate()
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    bio: user?.bio || "",
+    avatar: user?.avatar || "",
+  })
+
   const userGigs = mockGigs.filter(g => g.sellerId === user?.id)
   const userReviews = mockReviews.filter(r => r.authorId === user?.id || mockGigs.find(g => g.id === r.gigId)?.sellerId === user?.id) // simplistic assumption for mock
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await updateUser(formData)
+      setIsEditDialogOpen(false)
+    } catch (error) {
+      console.error("Failed to update profile:", error)
+    }
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
+  const shareUrl = encodeURIComponent(window.location.href)
+  const shareText = encodeURIComponent(`Check out ${user?.name}'s profile on FreelanceU!`)
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -37,14 +80,117 @@ export function ProfilePage() {
                       <p className="text-base text-muted-foreground mt-1 max-w-xl">{user?.bio}</p>
                     </div>
                     <div className="flex items-center gap-2 justify-center md:justify-end">
-                      <Button variant="outline" size="sm">
-                        <Share2 className="w-4 h-4 mr-2" />
-                        Share
-                      </Button>
-                      <Button size="sm">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Profile
-                      </Button>
+                      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Share Profile</DialogTitle>
+                            <DialogDescription>
+                              Share this profile with your network or copy the link to your clipboard.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex items-center space-x-2 pt-4">
+                            <div className="grid flex-1 gap-2">
+                              <Label htmlFor="link" className="sr-only">
+                                Link
+                              </Label>
+                              <Input
+                                id="link"
+                                defaultValue={window.location.href}
+                                readOnly
+                              />
+                            </div>
+                            <Button size="sm" className="px-3" onClick={handleCopyLink}>
+                              <span className="sr-only">Copy</span>
+                              {isCopied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                          <div className="flex justify-center gap-4 py-4">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="rounded-full"
+                              onClick={() => window.open(`https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareText}`, '_blank')}
+                            >
+
+
+                              <Twitter className="size-6"/>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="rounded-full"
+                              onClick={() => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`, '_blank')}
+                            >
+
+                              <Linkedin className="size-6"/>
+                            </Button>
+                          </div>
+                        </DialogContent>
+
+                      </Dialog>
+
+                      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button size="sm">
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Profile
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <form onSubmit={handleUpdateProfile}>
+                            <DialogHeader>
+                              <DialogTitle>Edit Profile</DialogTitle>
+                              <DialogDescription>
+                                Make changes to your profile here. Click save when you're done.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4">
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="name" className="text-right">
+                                  Name
+                                </Label>
+                                <Input
+                                  id="name"
+                                  value={formData.name}
+                                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                  className="col-span-3"
+                                />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="avatar" className="text-right">
+                                  Avatar URL
+                                </Label>
+                                <Input
+                                  id="avatar"
+                                  value={formData.avatar}
+                                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                                  className="col-span-3"
+                                />
+                              </div>
+                              <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="bio" className="text-right">
+                                  Bio
+                                </Label>
+                                <Textarea
+                                  id="bio"
+                                  value={formData.bio}
+                                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                                  className="col-span-3"
+                                />
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button type="submit">Save changes</Button>
+                            </DialogFooter>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
 
