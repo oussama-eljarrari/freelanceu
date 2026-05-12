@@ -4,6 +4,9 @@ import { Star, ArrowLeft, Clock, CheckCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { OrderPopup } from "./OrderPopup"
 import { ContactSellerPopup } from "./ContactSellerPopup"
+import { ReviewPopup } from "./ReviewPopup"
+import ReviewCard from "@/components/Review/ReviwCard"
+import { Review } from "@/types"
 import { api } from "@/api/client"
 
 export function GigDetailPage() {
@@ -14,6 +17,8 @@ export function GigDetailPage() {
     const [notFound, setNotFound] = useState(false)
     const [showOrderPopup, setShowOrderPopup] = useState(false)
     const [showContactPopup, setShowContactPopup] = useState(false)
+    const [showReviewPopup, setShowReviewPopup] = useState(false)
+    const [reviews, setReviews] = useState<Review[]>([])
 
     useEffect(() => {
         const load = async () => {
@@ -40,8 +45,8 @@ export function GigDetailPage() {
                     // try to enrich seller with profile data from users endpoint
                     if (fetched.seller?.id) {
                         try {
-                            const user = await api.get(`/users/${fetched.seller.id}`)
-                            if (user && user.id) {
+                            const user = await api.get<any>(`/users/${fetched.seller.id}`)
+                            if (user?.id) {
                                 fetched.seller = { ...fetched.seller, ...user }
                             }
                         } catch (e) {
@@ -50,6 +55,17 @@ export function GigDetailPage() {
                     }
 
                     setGig(fetched)
+
+                    // Load reviews for this gig
+                    try {
+                        const reviewsRes = await api.get<{ data: Review[] }>(`/reviews/gig/${id}`)
+                        if (reviewsRes?.data) {
+                            setReviews(reviewsRes.data)
+                        }
+                    } catch (e) {
+                        console.error('Error fetching reviews', e)
+                        // Don't fail the page if reviews fail to load
+                    }
                 } catch (err) {
                     console.error('Error fetching gig', err)
                     setNotFound(true)
@@ -144,7 +160,7 @@ export function GigDetailPage() {
                         <div className="mb-8">
                             <h2 className="text-xl font-bold text-foreground mb-3">Tags</h2>
                             <div className="flex flex-wrap gap-2">
-                                {gig.tags.map((tag) => (
+                                {((gig.tags ?? []) as string[]).map((tag) => (
                                     <span
                                         key={tag}
                                         className="rounded-full bg-primary/10 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary"
@@ -173,6 +189,36 @@ export function GigDetailPage() {
                                 </li>
                             </ul>
                         </div>
+
+                        {/* Reviews Section */}
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-xl font-bold text-foreground">Client Reviews</h2>
+                                <button
+                                    onClick={() => setShowReviewPopup(true)}
+                                    className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                                >
+                                    Write a Review
+                                </button>
+                            </div>
+                            {reviews.length === 0 ? (
+                                <div className="rounded-2xl border border-dashed border-border/60 bg-card/50 p-8 text-center">
+                                    <p className="text-muted-foreground mb-4">No reviews yet</p>
+                                    <button
+                                        onClick={() => setShowReviewPopup(true)}
+                                        className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                                    >
+                                        Be the first to review
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {reviews.map((review) => (
+                                        <ReviewCard key={review.id} review={review} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Sidebar */}
@@ -198,9 +244,16 @@ export function GigDetailPage() {
 
                             <button
                                 onClick={() => setShowContactPopup(true)}
-                                className="w-full rounded-full border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                                className="mb-3 w-full rounded-full border border-border bg-background px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                             >
                                 Contact Seller
+                            </button>
+
+                            <button
+                                onClick={() => setShowReviewPopup(true)}
+                                className="w-full rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:bg-muted"
+                            >
+                                ⭐ Leave Review
                             </button>
                         </div>
 
@@ -244,6 +297,15 @@ export function GigDetailPage() {
             {showOrderPopup && <OrderPopup gig={gig} onClose={() => setShowOrderPopup(false)} />}
             {showContactPopup && (
                 <ContactSellerPopup gig={gig} onClose={() => setShowContactPopup(false)} />
+            )}
+            {showReviewPopup && (
+                <ReviewPopup
+                    gig={gig}
+                    onClose={() => setShowReviewPopup(false)}
+                    onSubmit={(reviewData) => {
+                        setReviews([reviewData, ...reviews])
+                    }}
+                />
             )}
         </div>
     )
