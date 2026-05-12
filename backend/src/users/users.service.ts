@@ -52,6 +52,10 @@ export class UsersService {
         return this.users;
     }
 
+    findById(id: string): User | undefined {
+        return this.users.find(user => user.id === id);
+    }
+
     create({ name, email, password }: { name: string; email: string; password: string }): Omit<User, "password"> {
         const createdAt = new Date()
         const joinedAt = createdAt.toISOString().slice(0, 10)

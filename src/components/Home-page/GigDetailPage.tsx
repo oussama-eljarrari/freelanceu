@@ -1,18 +1,80 @@
 import { useParams, useNavigate } from "react-router-dom"
 import { mockGigs } from "@/mocks"
 import { Star, ArrowLeft, Clock, CheckCircle } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { OrderPopup } from "./OrderPopup"
 import { ContactSellerPopup } from "./ContactSellerPopup"
+import { api } from "@/api/client"
 
 export function GigDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const gig = mockGigs.find((g) => g.id === id)
+    const [gig, setGig] = useState<any | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [notFound, setNotFound] = useState(false)
     const [showOrderPopup, setShowOrderPopup] = useState(false)
     const [showContactPopup, setShowContactPopup] = useState(false)
 
-    if (!gig) {
+    useEffect(() => {
+        const load = async () => {
+            if (!id) return;
+
+            // Try mock first
+            const fromMock = mockGigs.find((g) => g.id === id)
+            if (fromMock) {
+                setGig(fromMock)
+                return
+            }
+
+            // If id looks like backend-created gig, fetch it
+            if (id.startsWith('g_')) {
+                try {
+                    setLoading(true)
+                    const res = await api.get<{ data: any }>(`/gigs/${id}`)
+                    const fetched = res?.data
+                    if (!fetched) {
+                        setNotFound(true)
+                        return
+                    }
+
+                    // try to enrich seller with profile data from users endpoint
+                    if (fetched.seller?.id) {
+                        try {
+                            const user = await api.get(`/users/${fetched.seller.id}`)
+                            if (user && user.id) {
+                                fetched.seller = { ...fetched.seller, ...user }
+                            }
+                        } catch (e) {
+                            // ignore user fetch errors, seller snapshot remains
+                        }
+                    }
+
+                    setGig(fetched)
+                } catch (err) {
+                    console.error('Error fetching gig', err)
+                    setNotFound(true)
+                } finally {
+                    setLoading(false)
+                }
+            } else {
+                setNotFound(true)
+            }
+        }
+
+        load()
+    }, [id])
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background px-4 py-10">
+                <div className="mx-auto max-w-7xl rounded-2xl border border-border/60 bg-card/70 p-10 text-center">
+                    <p className="text-lg font-semibold text-foreground">Loading gig...</p>
+                </div>
+            </div>
+        )
+    }
+
+    if (!gig || notFound) {
         return (
             <div className="min-h-screen bg-background px-4 py-10">
                 <div className="mx-auto max-w-7xl rounded-2xl border border-dashed border-border/60 bg-card/70 p-10 text-center">

@@ -2,15 +2,58 @@ import { mockGigs } from "@/mocks"
 import { GigCard } from "./GigCard"
 import { SearchBar } from "./SearchBar"
 import { CategoryFilter } from "./CategoryFilter"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { api } from "@/api/client"
 
+type Gig = {
+  id: string;
+  sellerId: string;
+  seller: { id: string; name: string; avatar: string; email?: string };
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  deliveryDays: number;
+  rating: number;
+  totalReviews: number;
+  thumbnail: string;
+  tags: string[];
+  createdAt: string;
+};
 
 export function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [backendGigs, setBackendGigs] = useState<Gig[]>([])
+  const [loading, setLoading] = useState(false)
+
+  // Fetch newly created gigs from backend on component mount
+  useEffect(() => {
+    const fetchBackendGigs = async () => {
+      try {
+        setLoading(true)
+        const response = await api.get<{ data: Gig[] }>('/gigs')
+        if (response?.data) {
+          // Filter out gigs that are already in mockGigs (by checking if they're backend-generated IDs)
+          const newBackendGigs = response.data.filter(gig => gig.id.startsWith('g_'))
+          setBackendGigs(newBackendGigs)
+        }
+      } catch (err) {
+        console.error("Error fetching gigs:", err)
+        // Silently fail - still show mock gigs
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBackendGigs()
+  }, [])
+
+  // Combine mock gigs + newly created backend gigs
+  const allGigs = useMemo(() => [...mockGigs, ...backendGigs], [backendGigs])
 
   const filteredGigs = useMemo(() => {
-    return mockGigs.filter((gig) => {
+    return allGigs.filter((gig) => {
       const matchesSearch =
         gig.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         gig.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -20,7 +63,7 @@ export function HomePage() {
 
       return matchesSearch && matchesCategory
     })
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, allGigs])
 
   return (
     <div className="relative min-h-screen bg-background px-4 pb-16 pt-6 sm:px-6 lg:px-8">
