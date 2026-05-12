@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Image, DollarSign, Clock, Tag, AlignLeft, Sparkles } from "lucide-react";
@@ -18,12 +19,24 @@ export default function CreateGigPage() {
   const [thumbnail, setThumbnail] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Parser les tags pour preview
   const tagsArray = tagsInput
     .split(",")
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0);
+
+  // Form validation check
+  const isFormValid = 
+    title.trim().length >= 40 && 
+    title.length <= 80 &&
+    description.trim().length > 0 &&
+    category &&
+    price &&
+    Number(price) >= 5 &&
+    deliveryDays &&
+    Number(deliveryDays) >= 1;
 
   if (!isAuthenticated) {
     return (
@@ -34,35 +47,85 @@ export default function CreateGigPage() {
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    // Client-side validation
+    if (!title.trim()) {
+      setError("Le titre est requis");
+      return;
+    }
+
+    if (title.length < 40) {
+      setError(`Le titre doit contenir au moins 40 caractères (actuellement: ${title.length})`);
+      return;
+    }
+
+    if (title.length > 80) {
+      setError(`Le titre ne doit pas dépasser 80 caractères (actuellement: ${title.length})`);
+      return;
+    }
+
+    if (!description.trim()) {
+      setError("La description est requise");
+      return;
+    }
+
+    if (!category) {
+      setError("La catégorie est requise");
+      return;
+    }
+
+    if (!price) {
+      setError("Le prix est requis");
+      return;
+    }
+
+    if (Number(price) < 5) {
+      setError("Le prix doit être d'au moins $5");
+      return;
+    }
+
+    if (!deliveryDays) {
+      setError("Le délai de livraison est requis");
+      return;
+    }
+
+    if (Number(deliveryDays) < 1) {
+      setError("Le délai de livraison doit être au moins 1 jour");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      // Création de l'objet qui correspond PARFAITEMENT à l'interface Gig
-      const newGigData = {
-        // En conditions réelles, l'ID, la date et les stats sont générés par le backend
-        id: `g_${Math.random().toString(36).substr(2, 9)}`,
-        sellerId: user?.id,
-        // On ne passe généralement pas l'objet 'seller' entier à la création, le backend le fera
+    try {
+      // Préparer les données à envoyer au backend
+      const gigData = {
         title,
         description,
         category,
         price: Number(price),
         deliveryDays: Number(deliveryDays),
-        rating: 0,
-        totalReviews: 0,
         thumbnail: thumbnail || "https://picsum.photos/seed/default/400/300",
         tags: tagsArray,
-        createdAt: new Date().toISOString().split('T')[0],
       };
-      
-      console.log("Nouveau Gig prêt à être envoyé à l'API :", newGigData);
-      
-      alert("Gig créé avec succès ! (Simulation)");
+
+      // Envoyer au backend
+      const response = await api.post<{ message: string; data: any }>('/gigs', gigData);
+
+      if (response && response.data) {
+        console.log("Gig créé avec succès :", response.data);
+        alert("Gig créé avec succès !");
+        navigate("/home");
+      }
+    } catch (err: any) {
+      const errorMessage = err?.message || "Erreur lors de la création du gig";
+      setError(errorMessage);
+      console.error("Erreur création gig:", err);
+    } finally {
       setIsSubmitting(false);
-      navigate("/home"); 
-    }, 1000);
+    }
   };
 
   return (
@@ -85,6 +148,12 @@ export default function CreateGigPage() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <p className="text-sm font-medium text-red-900">{error}</p>
+              </div>
+            )}
             
             {/* Section 1: Service Basics */}
             <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow">
@@ -101,11 +170,22 @@ export default function CreateGigPage() {
                     type="text"
                     required
                     placeholder="Ex: I will design a professional logo for your brand"
-                    className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent transition-all"
+                    className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
+                      title.length >= 40 && title.length <= 80
+                        ? 'border-input bg-background focus-visible:ring-primary'
+                        : title.length > 0
+                        ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                        : 'border-input bg-background focus-visible:ring-primary'
+                    }`}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
-                  <p className="text-xs text-muted-foreground">Minimum 40 caractères - maximum 80 caractères</p>
+                  <div className="flex justify-between text-xs">
+                    <p className="text-muted-foreground">Minimum 40 caractères - maximum 80 caractères</p>
+                    <p className={title.length >= 40 && title.length <= 80 ? 'text-green-600 font-medium' : title.length > 0 && (title.length < 40 || title.length > 80) ? 'text-red-600 font-medium' : 'text-muted-foreground'}>
+                      {title.length}/80
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -176,11 +256,20 @@ export default function CreateGigPage() {
                         min="5"
                         required
                         placeholder="50"
-                        className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent transition-all"
+                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
+                          price && Number(price) >= 5
+                            ? 'border-input bg-background focus-visible:ring-primary'
+                            : price && Number(price) < 5
+                            ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                            : 'border-input bg-background focus-visible:ring-primary'
+                        }`}
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                       />
                     </div>
+                    {price && Number(price) < 5 && (
+                      <p className="text-xs text-red-600 font-medium">Le prix minimum est $5</p>
+                    )}
                   </div>
 
                   {/* Delivery Days */}
@@ -193,12 +282,21 @@ export default function CreateGigPage() {
                         min="1"
                         required
                         placeholder="3"
-                        className="flex h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent transition-all"
+                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
+                          deliveryDays && Number(deliveryDays) >= 1
+                            ? 'border-input bg-background focus-visible:ring-primary'
+                            : deliveryDays && Number(deliveryDays) < 1
+                            ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                            : 'border-input bg-background focus-visible:ring-primary'
+                        }`}
                         value={deliveryDays}
                         onChange={(e) => setDeliveryDays(e.target.value)}
                       />
                       <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     </div>
+                    {deliveryDays && Number(deliveryDays) < 1 && (
+                      <p className="text-xs text-red-600 font-medium">Minimum 1 jour</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -346,11 +444,11 @@ export default function CreateGigPage() {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isFormValid}
                 size="lg"
                 className="w-full h-12 rounded-lg font-semibold text-base"
               >
-                {isSubmitting ? "Création en cours..." : "Publier le Gig"}
+                {isSubmitting ? "Création en cours..." : !isFormValid ? "Complétez tous les champs" : "Publier le Gig"}
               </Button>
 
               {/* Info Box */}
