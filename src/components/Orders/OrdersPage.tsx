@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Order } from "@/types";
-import { mockOrders } from "@/mocks";
+import { api } from "@/api/client";
+import { ContactSellerPopup } from "../Home-page/ContactSellerPopup";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +22,36 @@ import {
 
 export default function OrdersPage() {
   const { user, isAuthenticated } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showContactPopup, setShowContactPopup] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const loadOrders = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await api.get<{ data: Order[]; stats?: unknown }>("/orders");
+        setOrders(response.data ?? []);
+      } catch (requestError) {
+        setError(requestError instanceof Error ? requestError.message : "Failed to load orders");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return (
@@ -34,8 +62,26 @@ export default function OrdersPage() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h2 className="text-2xl font-semibold">Chargement des commandes</h2>
+        <p className="text-muted-foreground mt-2">Récupération de vos commandes en cours...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <h2 className="text-2xl font-semibold">Erreur</h2>
+        <p className="text-muted-foreground mt-2">{error}</p>
+      </div>
+    );
+  }
+
   // Filtrage des commandes où l'utilisateur connecté est le client
-  let userOrders: Order[] = mockOrders.filter(
+  let userOrders: Order[] = orders.filter(
     (order: Order) => order.clientId === user?.id
   );
 
@@ -53,10 +99,10 @@ export default function OrdersPage() {
 
   // Statistiques
   const stats = {
-    total: mockOrders.filter((o: Order) => o.clientId === user?.id).length,
-    completed: mockOrders.filter((o: Order) => o.clientId === user?.id && (o.status.toLowerCase() === "completed" || o.status.toLowerCase() === "delivered")).length,
-    inProgress: mockOrders.filter((o: Order) => o.clientId === user?.id && o.status.toLowerCase() === "in_progress").length,
-    pending: mockOrders.filter((o: Order) => o.clientId === user?.id && o.status.toLowerCase() === "pending").length,
+    total: orders.filter((o: Order) => o.clientId === user?.id).length,
+    completed: orders.filter((o: Order) => o.clientId === user?.id && (o.status.toLowerCase() === "completed" || o.status.toLowerCase() === "delivered")).length,
+    inProgress: orders.filter((o: Order) => o.clientId === user?.id && o.status.toLowerCase() === "in_progress").length,
+    pending: orders.filter((o: Order) => o.clientId === user?.id && o.status.toLowerCase() === "pending").length,
   };
 
   const getStatusIcon = (status: string) => {
@@ -111,7 +157,8 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+    <>
+    <div className="min-h-screen bg-linear-to-b from-background to-background/95">
       <div className="container mx-auto py-12 px-4 md:px-8 max-w-7xl">
         {/* Header */}
         <div className="mb-10">
@@ -135,19 +182,19 @@ export default function OrdersPage() {
               <p className="text-sm text-muted-foreground mt-1">Total commandes</p>
             </CardContent>
           </Card>
-          <Card className="border border-border/60 hover:shadow-md transition-shadow bg-blue-50/50 border-blue-200/50">
+          <Card className="border hover:shadow-md transition-shadow bg-blue-50/50 border-blue-200/50">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-blue-600">{stats.inProgress}</div>
               <p className="text-sm text-blue-600/70 mt-1">En cours</p>
             </CardContent>
           </Card>
-          <Card className="border border-border/60 hover:shadow-md transition-shadow bg-green-50/50 border-green-200/50">
+          <Card className="border hover:shadow-md transition-shadow bg-green-50/50 border-green-200/50">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-green-600">{stats.completed}</div>
               <p className="text-sm text-green-600/70 mt-1">Complétées</p>
             </CardContent>
           </Card>
-          <Card className="border border-border/60 hover:shadow-md transition-shadow bg-amber-50/50 border-amber-200/50">
+          <Card className="border hover:shadow-md transition-shadow bg-amber-50/50 border-amber-200/50">
             <CardContent className="pt-6">
               <div className="text-3xl font-bold text-amber-600">{stats.pending}</div>
               <p className="text-sm text-amber-600/70 mt-1">En attente</p>
@@ -236,7 +283,7 @@ export default function OrdersPage() {
                         {/* Left Content */}
                         <div className="flex gap-4 flex-1">
                           {/* Thumbnail */}
-                          <div className="hidden sm:block h-16 w-20 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <div className="hidden sm:block h-16 w-20 rounded-lg overflow-hidden bg-muted shrink-0">
                             <img
                               src={order.gig?.thumbnail || "https://picsum.photos/seed/order/100/100"}
                               alt={order.gig?.title}
@@ -250,7 +297,7 @@ export default function OrdersPage() {
                               <h3 className="font-semibold text-foreground truncate">
                                 {order.gig?.title || "Service indisponible"}
                               </h3>
-                              <Badge variant="outline" className="text-xs flex-shrink-0">
+                              <Badge variant="outline" className="text-xs shrink-0">
                                 #{order.id}
                               </Badge>
                             </div>
@@ -273,7 +320,7 @@ export default function OrdersPage() {
                         </div>
 
                         {/* Status & Actions */}
-                        <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                        <div className="flex flex-col items-end gap-3 shrink-0">
                           <div className="flex items-center gap-2">
                             {getStatusIcon(order.status)}
                             <Badge className={`${
@@ -326,8 +373,15 @@ export default function OrdersPage() {
                           </div>
 
                           <div className="flex gap-2 pt-2">
-                            <Button size="sm" className="flex-1">
-                              Contacter le freelance
+                            <Button 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowContactPopup(true);
+                              }}
+                            >
+                              Contact Seller
                             </Button>
                             {(order.status.toLowerCase() === "completed" || order.status.toLowerCase() === "delivered") && (
                               <Button size="sm" variant="outline" className="flex-1">
@@ -346,5 +400,39 @@ export default function OrdersPage() {
         </div>
       </div>
     </div>
+
+    {/* Contact Seller Popup */}
+    {showContactPopup && selectedOrder && (
+      <ContactSellerPopup 
+        gig={{
+          id: selectedOrder.gigId,
+          sellerId: selectedOrder.freelancerId,
+          seller: {
+            name: selectedOrder.freelancer.name,
+            email: selectedOrder.freelancer.email || '',
+            avatar: selectedOrder.freelancer.avatar,
+            role: 'freelancer' as const,
+            bio: '',
+            joinedAt: '',
+            rating: 0,
+            totalReviews: 0,
+            id: selectedOrder.freelancerId,
+            password: '',
+          },
+          title: selectedOrder.gig?.title || '',
+          description: selectedOrder.gig?.description || '',
+          category: 'Development' as const,
+          price: selectedOrder.price,
+          deliveryDays: selectedOrder.gig?.deliveryDays || 0,
+          rating: 0,
+          totalReviews: 0,
+          thumbnail: selectedOrder.gig?.thumbnail || '',
+          tags: [],
+          createdAt: selectedOrder.createdAt,
+        }}
+        onClose={() => setShowContactPopup(false)}
+      />
+    )}
+    </>
   );
 }

@@ -1,6 +1,8 @@
 import { X, Wallet, CreditCard, DollarSign } from "lucide-react"
 import { Gig } from "@/types"
 import { useState } from "react"
+import { api } from "@/api/client"
+import { useAuth } from "@/hooks/useAuth"
 
 interface OrderPopupProps {
     gig: Gig
@@ -10,15 +12,32 @@ interface OrderPopupProps {
 export function OrderPopup({ gig, onClose }: OrderPopupProps) {
     const [paymentMethod, setPaymentMethod] = useState<"wallet" | "card" | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
+    const { user, isAuthenticated } = useAuth()
 
-    const handleConfirmOrder = () => {
-        if (!paymentMethod) return
+    const handleConfirmOrder = async () => {
+        if (!paymentMethod || !isAuthenticated || !user) return
         setIsProcessing(true)
-        // Simulate payment processing
-        setTimeout(() => {
+        try {
+            await api.post("/orders", {
+                gigId: gig.id,
+                gigTitle: gig.title,
+                gigDescription: gig.description,
+                gigThumbnail: gig.thumbnail,
+                deliveryDays: gig.deliveryDays,
+                freelancerId: gig.sellerId,
+                freelancerName: gig.seller.name,
+                freelancerAvatar: gig.seller.avatar,
+                price: gig.price,
+                requirements: `Payment method: ${paymentMethod}`,
+            })
+
             alert("Order placed successfully!")
             onClose()
-        }, 1500)
+        } catch (error) {
+            alert(error instanceof Error ? error.message : "Failed to place order")
+        } finally {
+            setIsProcessing(false)
+        }
     }
 
     return (
@@ -137,7 +156,7 @@ export function OrderPopup({ gig, onClose }: OrderPopupProps) {
                     </button>
                     <button
                         onClick={handleConfirmOrder}
-                        disabled={!paymentMethod || isProcessing}
+                        disabled={!paymentMethod || isProcessing || !isAuthenticated}
                         className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground flex items-center justify-center gap-2"
                     >
                         {isProcessing ? (
