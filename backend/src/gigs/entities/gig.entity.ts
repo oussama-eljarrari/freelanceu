@@ -1,4 +1,4 @@
-export type GigSellerSnapshot = {
+export type GigSellerRelation = {
     id: string;
     name: string;
     avatar: string;
@@ -9,7 +9,7 @@ export type GigSellerSnapshot = {
 export class GigEntity {
     id: string;
     sellerId: string;
-    seller: GigSellerSnapshot;
+    seller: GigSellerRelation;
     title: string;
     description: string;
     category: string;

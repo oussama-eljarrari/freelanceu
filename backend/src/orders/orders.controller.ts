@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Session, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, Session, UnauthorizedException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersService } from './orders.service';
@@ -18,12 +18,7 @@ export class OrdersController {
 
         const requiredFields = [
             payload.gigId,
-            payload.gigTitle,
-            payload.gigDescription,
-            payload.gigThumbnail,
             payload.freelancerId,
-            payload.freelancerName,
-            payload.freelancerAvatar,
             payload.price,
             payload.requirements,
         ];
@@ -33,30 +28,33 @@ export class OrdersController {
         }
 
         const data = this.ordersService.create(payload, user);
+        if (!data) {
+            throw new BadRequestException('Invalid order references');
+        }
         return { message: 'Order created', data };
     }
 
     @Get()
-    findAll(@Session() session: any) {
+    findAll(@Session() session: any, @Query('include') include?: string) {
         const user = session?.user;
 
         if (!user) {
             throw new UnauthorizedException('You must be signed in to view orders');
         }
 
-        const data = this.ordersService.findForUser(user);
+        const data = this.ordersService.findForUser(user, parseInclude(include) as any);
         return { data, stats: this.ordersService.getStatusCounts(data) };
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string, @Session() session: any) {
+    findOne(@Param('id') id: string, @Session() session: any, @Query('include') include?: string) {
         const user = session?.user;
 
         if (!user) {
             throw new UnauthorizedException('You must be signed in to view orders');
         }
 
-        const order = this.ordersService.findOne(id);
+        const order = this.ordersService.findOne(id, parseInclude(include) as any);
 
         if (!order) {
             throw new NotFoundException('Order not found');
@@ -91,7 +89,7 @@ export class OrdersController {
             throw new BadRequestException('Invalid order status');
         }
 
-        const data = this.ordersService.update(id, payload);
+        const data = this.ordersService.update(id, payload, ['gig', 'client', 'freelancer'] as any);
 
         if (!data) {
             throw new NotFoundException('Order not found');
@@ -103,4 +101,8 @@ export class OrdersController {
     private isValidStatus(status: string): status is OrderStatus {
         return ['pending', 'in_progress', 'delivered', 'completed', 'cancelled'].includes(status);
     }
+}
+
+function parseInclude(include?: string): string[] {
+    return include?.split(',').map((item) => item.trim()).filter(Boolean) ?? [];
 }

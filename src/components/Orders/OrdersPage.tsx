@@ -41,7 +41,7 @@ export default function OrdersPage() {
       setError(null);
 
       try {
-        const response = await api.get<{ data: Order[]; stats?: unknown }>("/orders");
+        const response = await api.get<{ data: Order[]; stats?: unknown }>("/orders?include=gig,client,freelancer");
         setOrders(response.data ?? []);
       } catch (requestError) {
         setError(requestError instanceof Error ? requestError.message : "Failed to load orders");

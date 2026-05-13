@@ -1,4 +1,4 @@
-import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield } from "lucide-react"
+import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield, PlusIcon, Plus } from "lucide-react"
 import { Logo } from "./Logo"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "../Home-page/SearchBar"
@@ -134,7 +134,17 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated ? (
-            <ProfileCercle  />
+            <>
+              <div>
+                <Button variant="default" asChild>
+                  <Link to="/gig/create">
+                  
+                  <PlusIcon />
+                  Create Gig</Link>
+                </Button>
+              </div>
+              <ProfileCercle />
+            </>
           ) : (
             <>
               <Button variant="outline" asChild>
@@ -188,6 +198,10 @@ function ProfileCercle() {
         </div>
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={() => navigate("/gig/create")}>
+        <Plus className="mr-2 h-4 w-4" />
+        <span>Create your own Gig</span>
+      </DropdownMenuItem>
       <DropdownMenuItem onClick={() => navigate("/dashboard")}>
         <LayoutDashboard className="mr-2 h-4 w-4" />
         <span>Dashboard</span>

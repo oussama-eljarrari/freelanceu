@@ -25,7 +25,7 @@ export function GigDetailPage() {
 
             try {
                 setLoading(true)
-                const res = await api.get<{ data: any }>(`/gigs/${id}`)
+                const res = await api.get<{ data: any }>(`/gigs/${id}?include=seller,tags`)
                 const fetched = res?.data
                 if (!fetched) {
                     setNotFound(true)
@@ -47,7 +47,7 @@ export function GigDetailPage() {
                 setGig(fetched)
 
                 try {
-                    const reviewsRes = await api.get<{ data: Review[] }>(`/reviews/gig/${id}`)
+                    const reviewsRes = await api.get<{ data: Review[] }>(`/reviews/gig/${id}?include=author`)
                     if (reviewsRes?.data) {
                         setReviews(reviewsRes.data)
                     }

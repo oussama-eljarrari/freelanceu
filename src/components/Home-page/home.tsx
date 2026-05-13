@@ -3,6 +3,7 @@ import { SearchBar } from "./SearchBar"
 import { CategoryFilter } from "./CategoryFilter"
 import { useState, useMemo, useEffect } from "react"
 import { api } from "@/api/client"
+import { useAuth } from "@/hooks/useAuth"
 
 type Gig = {
   id: string;
@@ -25,16 +26,16 @@ export function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [backendGigs, setBackendGigs] = useState<Gig[]>([])
   const [loading, setLoading] = useState(false)
-
+  const { user } = useAuth()
   // Fetch newly created gigs from backend on component mount
   useEffect(() => {
     const fetchBackendGigs = async () => {
       try {
         setLoading(true)
-        const response = await api.get<{ data: Gig[] }>('/gigs')
+        const response = await api.get<{ data: Gig[] }>('/gigs?include=seller,tags')
         if (response?.data) {
           // Filter out gigs that are already in mockGigs (by checking if they're backend-generated IDs)
-          setBackendGigs(response.data)
+          setBackendGigs(response.data.filter(gig => gig.sellerId !== user?.id))
         }
       } catch (err) {
         console.error("Error fetching gigs:", err)
@@ -48,7 +49,7 @@ export function HomePage() {
   }, [])
 
   // Combine mock gigs + newly created backend gigs
-  const allGigs = useMemo(() => [ ...backendGigs], [backendGigs])
+  const allGigs = useMemo(() => [...backendGigs], [backendGigs])
 
   const filteredGigs = useMemo(() => {
     return allGigs.filter((gig) => {
@@ -66,7 +67,7 @@ export function HomePage() {
   return (
     <div className="relative min-h-screen bg-background px-4 pb-16 pt-6 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-      
+
 
       <div className="mx-auto mt-8 max-w-7xl">
         <div className="mb-8 rounded-2xl border border-border/60 bg-card/70 p-6 text-center shadow-sm backdrop-blur sm:p-8">
