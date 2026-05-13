@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 export function Appel() {
   return (
@@ -19,7 +20,9 @@ export function Appel() {
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
               <Button size="lg" asChild>
-                <a href="#">Sign up for free</a>
+                <Link to="/signup">
+                  Sign up for free
+                </Link>
               </Button>
               <Button
                 size="lg"

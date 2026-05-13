@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ["freelanceu.jounaid.dev"],
     proxy: {
       "/api": {
         target: "http://localhost:3000",

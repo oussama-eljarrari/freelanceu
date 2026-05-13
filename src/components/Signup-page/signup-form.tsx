@@ -17,7 +17,7 @@ export function SignupForm() {
   const [error, setError] = useState<string | null>(null)
 
   const { signup } = useAuth()
-  
+
   const handleSubmit = async (event: React.FormEvent) => {
 
     event.preventDefault()
@@ -48,7 +48,9 @@ export function SignupForm() {
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="flex justify-center">
-                  <Logo />
+                  <Link to="/">
+                    <Logo />
+                  </Link>
                 </div>
                 <div>
                   <h1 className="font-heading text-2xl font-bold text-foreground">

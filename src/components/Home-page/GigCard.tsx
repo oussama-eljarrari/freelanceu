@@ -94,7 +94,7 @@ export function GigCard({ gig }: GigCardProps) {
                         <p className="text-sm font-semibold text-foreground">
                             {gig.seller.name}
                         </p>
-                        <p className="text-xs text-muted-foreground">{gig.seller.role}</p>
+                        {/* <p className="text-xs text-muted-foreground">{gig.seller.role}</p> */}
                     </div>
                 </div>
 

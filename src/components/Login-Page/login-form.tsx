@@ -94,7 +94,9 @@ function LoginHeader() {
   return (
     <div className="flex flex-col items-center gap-4 text-center">
       <div className="flex justify-center">
-        <Logo />
+        <Link to="/">
+          <Logo />
+        </Link>
       </div>
       <div>
         <h1 className="font-heading text-2xl font-bold text-foreground">
@@ -154,7 +156,7 @@ export function LoginForm(props: ComponentProps<"div">) {
       await login(email, password)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")
-    }finally{
+    } finally {
       setIsRedirecting(false)
     }
   }
@@ -186,14 +188,7 @@ export function LoginForm(props: ComponentProps<"div">) {
                   type="password"
                   value={password}
                   onChange={setPassword}
-                  action={
-                    <a
-                      href="#"
-                      className="text-sm text-muted-foreground underline-offset-4 hover:text-primary hover:underline"
-                    >
-                      Forgot your password?
-                    </a>
-                  }
+
                 />
 
                 <Button

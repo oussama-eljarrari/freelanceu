@@ -51,6 +51,7 @@ export class ReviewsService {
             INSERT INTO reviews (id, order_id, gig_id, author_id, rating, comment, created_at)
             VALUES (@id, @orderId, @gigId, @authorId, @rating, @comment, @createdAt)
         `).run(review);
+        
 
         return this.findOne(review.id, ['author']) as ReviewEntity;
     }
@@ -58,7 +59,7 @@ export class ReviewsService {
     findByGigId(gigId: string, include: Include[] = []): ReviewEntity[] {
         const rows = this.database.connection().prepare('SELECT * FROM reviews WHERE gig_id = ? ORDER BY created_at DESC').all(gigId) as ReviewRow[];
 
-        
+
         return this.hydrate(rows.map((row) => this.toReview(row)), include);
     }
 
