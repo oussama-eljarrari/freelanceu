@@ -1,4 +1,6 @@
-import { mockGigs } from "@/mocks"
+import { api } from "@/api/client"
+// import { mockGigs } from "@/mocks"
+import { useEffect, useState } from "react"
 
 interface CategoryFilterProps {
     selectedCategory: string | null
@@ -6,10 +8,28 @@ interface CategoryFilterProps {
 }
 
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
-    // Extract unique categories from mock gigs
-    const categories = Array.from(
-        new Set(mockGigs.map((gig) => gig.category))
-    ).sort()
+
+    const [categories, setCategories] = useState<string[]>([])
+
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await api.get('/gigs/categories/list') as { data: string[] }
+                if (response?.data) {
+                    setCategories(response.data)
+                }   
+                
+                // In a real app, you would fetch categories from the backend here
+                // For this mock, we're just extracting unique categories from mockGigs
+            } catch (error) {
+                console.error('Error fetching categories', error)
+            }
+        }
+
+        fetchCategories()
+    }, [])
+
 
     return (
         <div className="mb-6 flex flex-wrap gap-2 rounded-2xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur">

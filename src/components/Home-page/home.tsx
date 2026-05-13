@@ -1,4 +1,3 @@
-import { mockGigs } from "@/mocks"
 import { GigCard } from "./GigCard"
 import { SearchBar } from "./SearchBar"
 import { CategoryFilter } from "./CategoryFilter"
@@ -35,8 +34,7 @@ export function HomePage() {
         const response = await api.get<{ data: Gig[] }>('/gigs')
         if (response?.data) {
           // Filter out gigs that are already in mockGigs (by checking if they're backend-generated IDs)
-          const newBackendGigs = response.data.filter(gig => gig.id.startsWith('g_'))
-          setBackendGigs(newBackendGigs)
+          setBackendGigs(response.data)
         }
       } catch (err) {
         console.error("Error fetching gigs:", err)
@@ -50,7 +48,7 @@ export function HomePage() {
   }, [])
 
   // Combine mock gigs + newly created backend gigs
-  const allGigs = useMemo(() => [...mockGigs, ...backendGigs], [backendGigs])
+  const allGigs = useMemo(() => [ ...backendGigs], [backendGigs])
 
   const filteredGigs = useMemo(() => {
     return allGigs.filter((gig) => {

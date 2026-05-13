@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from "react-router-dom"
-import { mockGigs } from "@/mocks"
 import { Star, ArrowLeft, Clock, CheckCircle } from "lucide-react"
 import { useState, useEffect } from "react"
 import { OrderPopup } from "./OrderPopup"
@@ -24,57 +23,45 @@ export function GigDetailPage() {
         const load = async () => {
             if (!id) return;
 
-            // Try mock first
-            const fromMock = mockGigs.find((g) => g.id === id)
-            if (fromMock) {
-                setGig(fromMock)
-                return
-            }
+            try {
+                setLoading(true)
+                const res = await api.get<{ data: any }>(`/gigs/${id}`)
+                const fetched = res?.data
+                if (!fetched) {
+                    setNotFound(true)
+                    return
+                }
 
-            // If id looks like backend-created gig, fetch it
-            if (id.startsWith('g_')) {
-                try {
-                    setLoading(true)
-                    const res = await api.get<{ data: any }>(`/gigs/${id}`)
-                    const fetched = res?.data
-                    if (!fetched) {
-                        setNotFound(true)
-                        return
-                    }
-
-                    // try to enrich seller with profile data from users endpoint
-                    if (fetched.seller?.id) {
-                        try {
-                            const user = await api.get<any>(`/users/${fetched.seller.id}`)
-                            if (user?.id) {
-                                fetched.seller = { ...fetched.seller, ...user }
-                            }
-                        } catch (e) {
-                            // ignore user fetch errors, seller snapshot remains
-                        }
-                    }
-
-                    setGig(fetched)
-
-                    // Load reviews for this gig
+                // try to enrich seller with profile data from users endpoint
+                if (fetched.seller?.id) {
                     try {
-                        const reviewsRes = await api.get<{ data: Review[] }>(`/reviews/gig/${id}`)
-                        if (reviewsRes?.data) {
-                            setReviews(reviewsRes.data)
+                        const user = await api.get<any>(`/users/${fetched.seller.id}`)
+                        if (user?.id) {
+                            fetched.seller = { ...fetched.seller, ...user }
                         }
                     } catch (e) {
-                        console.error('Error fetching reviews', e)
-                        // Don't fail the page if reviews fail to load
+                        // ignore user fetch errors, seller snapshot remains
                     }
-                } catch (err) {
-                    console.error('Error fetching gig', err)
-                    setNotFound(true)
-                } finally {
-                    setLoading(false)
                 }
-            } else {
+
+                setGig(fetched)
+
+                try {
+                    const reviewsRes = await api.get<{ data: Review[] }>(`/reviews/gig/${id}`)
+                    if (reviewsRes?.data) {
+                        setReviews(reviewsRes.data)
+                    }
+                } catch (e) {
+                    console.error('Error fetching reviews', e)
+                    // Don't fail the page if reviews fail to load
+                }
+            } catch (err) {
+                console.error('Error fetching gig', err)
                 setNotFound(true)
+            } finally {
+                setLoading(false)
             }
+
         }
 
         load()

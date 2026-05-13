@@ -134,7 +134,7 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated ? (
-            <ProfileCercle user={user!} />
+            <ProfileCercle  />
           ) : (
             <>
               <Button variant="outline" asChild>
@@ -160,12 +160,14 @@ export function Navbar() {
 
 }
 
-function ProfileCercle({ user }: { user: User }) {
-  const { logout } = useAuth()
+function ProfileCercle() {
+  const { logout, user } = useAuth()
 
   const navigate = useNavigate()
 
-
+  if (!user) {
+    return null
+  }
 
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>
