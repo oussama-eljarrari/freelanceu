@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { BrandMark } from "@/components/Landing-Page/BrandMark"
+import { Logo } from "@/components/Landing-Page/Logo"
 import loginSide from "@/assets/login-side.png"
 import { useAuth } from "@/Context/AuthContext"
 
@@ -48,7 +48,7 @@ export function SignupForm() {
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
                 <div className="flex justify-center">
-                  <BrandMark />
+                  <Logo />
                 </div>
                 <div>
                   <h1 className="font-heading text-2xl font-bold text-foreground">

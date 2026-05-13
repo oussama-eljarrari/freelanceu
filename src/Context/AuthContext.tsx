@@ -16,6 +16,8 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+
 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -55,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(user)
+      await delay(1500) // Pour visualiser dak  delay dyal connection to grant access l User mn b3d Login .....
       navigate("/home")
     } catch (err: any) {
       throw new Error(err.message || "Failed to login")

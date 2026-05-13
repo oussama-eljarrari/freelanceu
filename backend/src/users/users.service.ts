@@ -79,7 +79,7 @@ export class UsersService {
             email,
             username: email, // login uses email
             password,
-            avatar: `https://i.pravatar.cc/150?u=${encodeURIComponent(email)}`,
+            avatar: generateAvatar(name), // Instead of Random pic - aywali avatar dyal use aka (PFP) houwa abreviation dyla full name dyalo
             role,
             bio,
             joinedAt,
@@ -110,3 +110,32 @@ export class UsersService {
         return this.users[userIndex];
     }
 }
+
+// Helpers for Initial avatar pfp exemple : User name (ALI ZOUHDI --> PFP is "AZ")
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2);
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`;
+}
+
+function pickColor(seed: string): string {
+  const colors = ["#6C5CE7", "#00B894", "#0984E3", "#E17055"];
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h << 5) - h + seed.charCodeAt(i);
+    h |= 0;
+  }
+  return colors[Math.abs(h) % colors.length];
+}
+
+function generateAvatar(name: string): string {
+  const initials = getInitials(name).toUpperCase();
+  const bg = pickColor(name);
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'>
+    <rect width='100%' height='100%' fill='${bg}' rx='12'/>
+    <text x='50%' y='50%' dy='.35em' text-anchor='middle'
+      fill='#fff' font-family='Arial' font-size='48' font-weight='600'>${initials}</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+

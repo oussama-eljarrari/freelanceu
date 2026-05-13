@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 
-export function CallToActionSection() {
+export function Appel() {
   return (
     <section id="cta" className="bg-slate-950 py-20 text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,5 @@
 import { Menu, LogOut, User as UserIcon, LayoutDashboard, Shield } from "lucide-react"
-import { BrandMark } from "./BrandMark"
+import { Logo } from "./Logo"
 import { Button } from "@/components/ui/button"
 import { SearchBar } from "../Home-page/SearchBar"
 import { useEffect, useState } from "react";
@@ -101,7 +101,7 @@ export function Navbar() {
     <header className="sticky top-0 z-20 border-b border-border/70 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link to="/home" className="flex items-center gap-2">
-          <BrandMark />
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

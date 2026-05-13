@@ -1,5 +1,5 @@
 import { Categories } from "./Categories"
-import { CallToActionSection } from "./cta-section"
+import { Appel } from "./Appel"
 
 import { Rightcard } from "./Right-Card"
 import { HowItWorksSection } from "./Steps"
@@ -14,7 +14,7 @@ export function LandingPage() {
         <Categories />
         <HowItWorksSection />
         <StatsSection />
-        <CallToActionSection />
+        <Appel />
       </main>
     </div>
   )

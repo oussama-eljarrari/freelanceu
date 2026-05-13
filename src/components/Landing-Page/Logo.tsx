@@ -1,6 +1,6 @@
 import logoV2 from "@/assets/Logo_final.png"
 
-export function BrandMark() {
+export function Logo() {
   return (
     <div className="flex items-center gap-3">
       <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-primary shadow-lg shadow-primary/20">
