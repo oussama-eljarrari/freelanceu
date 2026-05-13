@@ -1,4 +1,3 @@
-import { mockDashboardStats, mockOrders } from "@/mocks"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { DollarSign, ClipboardList, CheckCircle, Star, ArrowRight, MoreHorizontal, Clock, CheckCircle2 } from "lucide-react"
 
@@ -16,15 +15,42 @@ import {
 } from "@/components/ui/table"
 import { useNavigate } from "react-router"
 import { useAuth } from "@/Context/AuthContext"
+import { api } from "@/api/client"
+import type { Order } from "@/types"
+import { useState, useEffect } from "react"
 
 export function DashboardPage() {
 
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [orders, setOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const stats = mockDashboardStats
-  const completedOrders = mockOrders.filter(o => o.freelancerId === user?.id && o.status === "completed")
-  const activeOrders = mockOrders.filter(o => o.freelancerId === user?.id && o.status === "in_progress")
+  useEffect(() => {
+    async function fetchOrders() {
+      try {
+        const res = await api.get<{ data: Order[] }>("/orders?include=gig,client")
+        setOrders(res.data)
+      } catch (error) {
+        console.error("Failed to fetch orders:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchOrders()
+  }, [])
+
+  const freelancerOrders = orders.filter(o => o.freelancerId === user?.id)
+  const completedOrders = freelancerOrders.filter(o => o.status === "completed")
+  const activeOrders = freelancerOrders.filter(o => o.status === "in_progress")
+
+  const totalEarnings = completedOrders.reduce((sum, o) => sum + o.price, 0)
+  const stats = {
+    totalEarnings,
+    activeOrders: activeOrders.length,
+    completedOrders: completedOrders.length,
+    averageRating: user?.rating ?? 0,
+  }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -45,11 +71,19 @@ export function DashboardPage() {
     // Calculate generic progress based on mock dates
     const startDate = new Date(start).getTime();
     const endDate = new Date(end).getTime();
-    const now = new Date("2025-04-21").getTime(); // Simulated current date to show progress
+    const now = Date.now();
     const total = endDate - startDate;
     const elapsed = now - startDate;
     const percentage = Math.max(0, Math.min(100, (elapsed / total) * 100));
     return percentage;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <p className="text-muted-foreground">Loading dashboard...</p>
+      </div>
+    )
   }
 
   return (
@@ -98,7 +132,7 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-heading">{stats.completedOrders}</div>
-              <p className="text-xs text-muted-foreground mt-1">47 total lifetime orders</p>
+              <p className="text-xs text-muted-foreground mt-1">{completedOrders.length + activeOrders.length + freelancerOrders.filter(o => o.status === "pending" || o.status === "delivered").length} total lifetime orders</p>
             </CardContent>
           </Card>
           <Card className="shadow-sm border-border/50">

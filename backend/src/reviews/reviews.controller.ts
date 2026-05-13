@@ -7,6 +7,7 @@ import {
     NotFoundException,
     Param,
     Post,
+    Query,
     Session,
     UnauthorizedException,
 } from '@nestjs/common';
@@ -42,20 +43,20 @@ export class ReviewsController {
     }
 
     @Get('gig/:gigId')
-    findByGigId(@Param('gigId') gigId: string) {
-        const reviews = this.reviewsService.findByGigId(gigId);
+    findByGigId(@Param('gigId') gigId: string, @Query('include') include?: string) {
+        const reviews = this.reviewsService.findByGigId(gigId, parseInclude(include) as any);
         return { data: reviews };
     }
 
     @Get()
-    findAll() {
-        const reviews = this.reviewsService.findAll();
+    findAll(@Query('include') include?: string) {
+        const reviews = this.reviewsService.findAll(parseInclude(include) as any);
         return { data: reviews };
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        const review = this.reviewsService.findOne(id);
+    findOne(@Param('id') id: string, @Query('include') include?: string) {
+        const review = this.reviewsService.findOne(id, parseInclude(include) as any);
 
         if (!review) {
             throw new NotFoundException('Review not found');
@@ -85,4 +86,8 @@ export class ReviewsController {
         this.reviewsService.delete(id);
         return { message: 'Review deleted successfully' };
     }
+}
+
+function parseInclude(include?: string): string[] {
+    return include?.split(',').map((item) => item.trim()).filter(Boolean) ?? [];
 }

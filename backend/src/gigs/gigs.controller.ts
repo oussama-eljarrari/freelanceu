@@ -57,10 +57,11 @@ export class GigsController {
     }
 
     @Get()
-    findAll(@Query('category') category?: string) {
-        let gigs = this.gigsService.findAll();
+    findAll(@Query('category') category?: string, @Query('include') include?: string) {
+        const includeList = parseInclude(include);
+        let gigs = this.gigsService.findAll(includeList as any);
         if (category) {
-            gigs = gigs.filter(gig => gig.category === category);
+            gigs = this.gigsService.findByCategory(category, includeList as any);
         }
         return { data: gigs };
     }
@@ -72,20 +73,20 @@ export class GigsController {
     }
 
     @Get('seller/my-gigs')
-    findUserGigs(@Session() session: any) {
+    findUserGigs(@Session() session: any, @Query('include') include?: string) {
         const user = session?.user;
 
         if (!user) {
             throw new UnauthorizedException('You must be signed in to view your gigs');
         }
 
-        const gigs = this.gigsService.findByUser(user);
+        const gigs = this.gigsService.findByUser(user, parseInclude(include) as any);
         return { data: gigs };
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        const gig = this.gigsService.findOne(id);
+    findOne(@Param('id') id: string, @Query('include') include?: string) {
+        const gig = this.gigsService.findOne(id, parseInclude(include) as any);
 
         if (!gig) {
             throw new NotFoundException('Gig not found');
@@ -131,7 +132,7 @@ export class GigsController {
             throw new BadRequestException('Delivery days must be at least 1');
         }
 
-        const updatedGig = this.gigsService.update(id, payload);
+        const updatedGig = this.gigsService.update(id, payload, ['seller', 'tags'] as any);
 
         if (!updatedGig) {
             throw new NotFoundException('Gig not found');
@@ -166,4 +167,8 @@ export class GigsController {
 
         return { message: 'Gig deleted successfully' };
     }
+}
+
+function parseInclude(include?: string): string[] {
+    return include?.split(',').map((item) => item.trim()).filter(Boolean) ?? [];
 }

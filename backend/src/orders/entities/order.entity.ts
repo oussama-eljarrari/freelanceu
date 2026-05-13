@@ -1,13 +1,13 @@
 export type OrderStatus = 'pending' | 'in_progress' | 'delivered' | 'completed' | 'cancelled';
 
-export type OrderUserSnapshot = {
+export type OrderUserRelation = {
     id: string;
     name: string;
     avatar: string;
     email?: string;
 };
 
-export type OrderGigSnapshot = {
+export type OrderGigRelation = {
     id: string;
     title: string;
     description: string;
@@ -18,11 +18,11 @@ export type OrderGigSnapshot = {
 export class OrderEntity {
     id: string;
     gigId: string;
-    gig: OrderGigSnapshot;
+    gig: OrderGigRelation;
     clientId: string;
-    client: OrderUserSnapshot;
+    client: OrderUserRelation;
     freelancerId: string;
-    freelancer: OrderUserSnapshot;
+    freelancer: OrderUserRelation;
     status: OrderStatus;
     price: number;
     requirements: string;

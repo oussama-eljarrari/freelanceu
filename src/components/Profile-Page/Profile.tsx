@@ -1,4 +1,3 @@
-import { mockGigs, mockReviews } from "@/mocks"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -6,9 +5,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Star, MapPin, Calendar, Briefcase, Edit, Share2, Clipboard, Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
 import { useAuth } from "@/Context/AuthContext"
+import { api } from "@/api/client"
+import type { Gig, Review } from "@/types"
 import {
   Dialog,
   DialogContent,
@@ -30,14 +31,49 @@ export function ProfilePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [userGigs, setUserGigs] = useState<Gig[]>([])
+  const [userReviews, setUserReviews] = useState<Review[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+
+  const deleteGig = async (gigId: string) => {
+    if (!confirm("Are you sure you want to delete this gig? This action cannot be undone.")) {
+      return
+    }
+    try {
+      await api.delete(`/gigs/${gigId}`)
+      setUserGigs(prev => prev.filter(g => g.id !== gigId))
+    } catch (error) {
+      console.error("Failed to delete gig:", error)
+      alert("An error occurred while trying to delete the gig. Please try again.")
+    }
+  }
+
+
+  useEffect(() => {
+    async function fetchProfileData() {
+      try {
+        const [gigsRes, reviewsRes] = await Promise.all([
+          api.get<{ data: Gig[] }>("/gigs/seller/my-gigs?include=seller,tags"),
+          api.get<{ data: Review[] }>("/reviews?include=author"),
+        ])
+        setUserGigs(gigsRes.data)
+        const gigIds = new Set(gigsRes.data.map(g => g.id))
+        setUserReviews(reviewsRes.data.filter(r => gigIds.has(r.gigId)))
+      } catch (error) {
+        console.error("Failed to fetch profile data:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchProfileData()
+  }, [])
+
   const [formData, setFormData] = useState({
     name: user?.name || "",
     bio: user?.bio || "",
     avatar: user?.avatar || "",
   })
-
-  const userGigs = mockGigs.filter(g => g.sellerId === user?.id)
-  const userReviews = mockReviews.filter(r => r.authorId === user?.id || mockGigs.find(g => g.id === r.gigId)?.sellerId === user?.id) // simplistic assumption for mock
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,6 +93,16 @@ export function ProfilePage() {
 
   const shareUrl = encodeURIComponent(window.location.href)
   const shareText = encodeURIComponent(`Check out ${user?.name}'s profile on FreelanceU!`)
+
+  const gigTitleMap = new Map(userGigs.map(g => [g.id, g.title]))
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <p className="text-muted-foreground">Loading profile...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -253,6 +299,9 @@ export function ProfilePage() {
                     <Button variant="outline" className="w-full" onClick={() => navigate(`/gig/${gig.id}`)}>
                       View Gig
                     </Button>
+                    <Button variant="destructive" className="w-full" onClick={() => deleteGig(gig.id)}>
+                      Delete Gig
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
@@ -293,7 +342,7 @@ export function ProfilePage() {
                       <div className="pt-3 border-t flex items-center gap-2">
                         <span className="text-xs text-muted-foreground">Purchased:</span>
                         <span className="text-xs font-medium bg-secondary/50 px-2 py-0.5 rounded-sm line-clamp-1">
-                          {mockGigs.find(g => g.id === review.gigId)?.title}
+                          {gigTitleMap.get(review.gigId)}
                         </span>
                       </div>
                     </div>

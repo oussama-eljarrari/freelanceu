@@ -1,4 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { DatabaseService } from 'src/database/database.service';
+import { GigsService } from 'src/gigs/gigs.service';
+import { UsersService } from 'src/users/users.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity, OrderStatus } from './entities/order.entity';
@@ -11,183 +14,113 @@ type SessionUser = {
     role?: string;
 };
 
+type OrderRow = {
+    id: string;
+    gig_id: string;
+    client_id: string;
+    freelancer_id: string;
+    status: OrderStatus;
+    price: number;
+    requirements: string;
+    delivery_deadline: string;
+    created_at: string;
+};
+
+type Include = 'gig' | 'client' | 'freelancer';
+
 @Injectable()
 export class OrdersService {
-    private readonly orders: OrderEntity[] = [
-        {
-            id: 'o1',
-            gigId: 'g1',
-            gig: {
-                id: 'g1',
-                title: 'I will design a professional logo for your brand',
-                description: 'High quality logo design with unlimited revisions. Delivered in PNG, SVG, and AI formats. Includes brand color palette.',
-                thumbnail: 'https://picsum.photos/seed/logo/400/300',
-                deliveryDays: 3,
-            },
-            clientId: 'u3',
-            client: {
-                id: 'u3',
-                name: 'Lina Ouhab',
-                avatar: 'https://i.pravatar.cc/150?img=23',
-                email: 'lina@example.com',
-            },
-            freelancerId: 'u1',
-            freelancer: {
-                id: 'u1',
-                name: 'Sara Malik',
-                avatar: 'https://i.pravatar.cc/150?img=47',
-                email: 'sara@example.com',
-            },
-            status: 'in_progress',
-            price: 50,
-            requirements: 'I need a logo for my coffee shop called Brew & Co. Colors: brown and cream.',
-            createdAt: '2025-04-20',
-            deliveryDeadline: '2025-04-23',
-        },
-        {
-            id: 'o2',
-            gigId: 'g2',
-            gig: {
-                id: 'g2',
-                title: 'I will build a React web app with NestJS backend',
-                description: 'Full-stack development with clean code, REST API, and deployment. Includes authentication and database setup.',
-                thumbnail: 'https://picsum.photos/seed/dev/400/300',
-                deliveryDays: 14,
-            },
-            clientId: 'u3',
-            client: {
-                id: 'u3',
-                name: 'Lina Ouhab',
-                avatar: 'https://i.pravatar.cc/150?img=23',
-                email: 'lina@example.com',
-            },
-            freelancerId: 'u2',
-            freelancer: {
-                id: 'u2',
-                name: 'Karim Benali',
-                avatar: 'https://i.pravatar.cc/150?img=12',
-                email: 'karim@example.com',
-            },
-            status: 'completed',
-            price: 300,
-            requirements: 'E-commerce app with Stripe payments and product catalog.',
-            createdAt: '2025-03-01',
-            deliveryDeadline: '2025-03-15',
-        },
-        {
-            id: 'o3',
-            gigId: 'g3',
-            gig: {
-                id: 'g3',
-                title: 'I will create social media graphics for your business',
-                description: 'Eye-catching posts and stories for Instagram, Facebook, and LinkedIn. Delivered in all required sizes.',
-                thumbnail: 'https://picsum.photos/seed/social/400/300',
-                deliveryDays: 2,
-            },
-            clientId: 'u3',
-            client: {
-                id: 'u3',
-                name: 'Lina Ouhab',
-                avatar: 'https://i.pravatar.cc/150?img=23',
-                email: 'lina@example.com',
-            },
-            freelancerId: 'u1',
-            freelancer: {
-                id: 'u1',
-                name: 'Sara Malik',
-                avatar: 'https://i.pravatar.cc/150?img=47',
-                email: 'sara@example.com',
-            },
-            status: 'pending',
-            price: 30,
-            requirements: 'Need 10 Instagram posts for a skincare brand launch.',
-            createdAt: '2025-04-28',
-            deliveryDeadline: '2025-04-30',
-        },
-    ];
+    constructor(
+        private readonly database: DatabaseService,
+        private readonly gigsService: GigsService,
+        private readonly usersService: UsersService,
+    ) {}
 
-    private createId(): string {
-        return `o_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    findAll(include: Include[] = []): OrderEntity[] {
+        const rows = this.db().prepare('SELECT * FROM orders ORDER BY created_at DESC').all() as OrderRow[];
+        return this.hydrate(rows.map((row) => this.toOrder(row)), include);
     }
 
-    findAll(): OrderEntity[] {
-        return this.orders;
-    }
-
-    findOne(id: string): OrderEntity | undefined {
-        return this.orders.find((order) => order.id === id);
-    }
-
-    findForUser(user: SessionUser): OrderEntity[] {
-        if (user.role === 'admin') {
-            return this.orders;
+    findOne(id: string, include: Include[] = []): OrderEntity | undefined {
+        const row = this.db().prepare('SELECT * FROM orders WHERE id = ?').get(id) as OrderRow | undefined;
+        if (!row) {
+            return undefined;
         }
 
-        return this.orders.filter((order) => order.clientId === user.id || order.freelancerId === user.id);
+        return this.hydrate([this.toOrder(row)], include)[0];
+    }
+
+    findForUser(user: SessionUser, include: Include[] = []): OrderEntity[] {
+        const rows = user.role === 'admin'
+            ? this.db().prepare('SELECT * FROM orders ORDER BY created_at DESC').all()
+            : this.db().prepare(`
+                SELECT * FROM orders
+                WHERE client_id = ? OR freelancer_id = ?
+                ORDER BY created_at DESC
+            `).all(user.id, user.id);
+
+        return this.hydrate((rows as OrderRow[]).map((row) => this.toOrder(row)), include);
     }
 
     create(payload: CreateOrderDto, client: SessionUser): OrderEntity {
-        const createdAt = new Date().toISOString();
-        const deliveryDeadline = payload.deliveryDeadline ?? new Date(Date.now() + payload.deliveryDays * 24 * 60 * 60 * 1000).toISOString();
+        const gig = this.gigsService.findOne(payload.gigId);
+        if (!gig) {
+            return null as any;
+        }
 
-        const order: OrderEntity = {
+        const freelancerId = payload.freelancerId || gig.sellerId;
+        const freelancer = this.usersService.findById(freelancerId);
+        const clientUser = this.usersService.findById(client.id);
+        if (!freelancer || !clientUser) {
+            return null as any;
+        }
+
+        const createdAt = new Date().toISOString();
+        const deliveryDays = payload.deliveryDays ?? gig.deliveryDays;
+        const deliveryDeadline = payload.deliveryDeadline ?? new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000).toISOString();
+
+        const order = {
             id: this.createId(),
-            gigId: payload.gigId,
-            gig: {
-                id: payload.gigId,
-                title: payload.gigTitle,
-                description: payload.gigDescription,
-                thumbnail: payload.gigThumbnail,
-                deliveryDays: payload.deliveryDays,
-            },
+            gigId: gig.id,
             clientId: client.id,
-            client: {
-                id: client.id,
-                name: client.name,
-                avatar: client.avatar,
-                email: client.email,
-            },
-            freelancerId: payload.freelancerId,
-            freelancer: {
-                id: payload.freelancerId,
-                name: payload.freelancerName,
-                avatar: payload.freelancerAvatar,
-            },
-            status: 'pending',
-            price: payload.price,
+            freelancerId,
+            status: 'pending' as OrderStatus,
+            price: payload.price ?? gig.price,
             requirements: payload.requirements,
             createdAt,
             deliveryDeadline,
         };
 
-        this.orders.unshift(order);
-        return order;
+        this.db().prepare(`
+            INSERT INTO orders (id, gig_id, client_id, freelancer_id, status, price, requirements, delivery_deadline, created_at)
+            VALUES (@id, @gigId, @clientId, @freelancerId, @status, @price, @requirements, @deliveryDeadline, @createdAt)
+        `).run(order);
+
+        return this.findOne(order.id, ['gig', 'client', 'freelancer']) as OrderEntity;
     }
 
-    update(id: string, payload: UpdateOrderDto): OrderEntity | null {
+    update(id: string, payload: UpdateOrderDto, include: Include[] = []): OrderEntity | null {
         const order = this.findOne(id);
-
         if (!order) {
             return null;
         }
 
-        if (payload.status) {
-            order.status = payload.status;
-        }
+        this.db().prepare(`
+            UPDATE orders
+            SET status = @status,
+                requirements = @requirements,
+                delivery_deadline = @deliveryDeadline,
+                price = @price
+            WHERE id = @id
+        `).run({
+            id,
+            status: payload.status ?? order.status,
+            requirements: payload.requirements ?? order.requirements,
+            deliveryDeadline: payload.deliveryDeadline ?? order.deliveryDeadline,
+            price: payload.price ?? order.price,
+        });
 
-        if (payload.requirements !== undefined) {
-            order.requirements = payload.requirements;
-        }
-
-        if (payload.deliveryDeadline !== undefined) {
-            order.deliveryDeadline = payload.deliveryDeadline;
-        }
-
-        if (payload.price !== undefined) {
-            order.price = payload.price;
-        }
-
-        return order;
+        return this.findOne(id, include) ?? null;
     }
 
     getStatusCounts(orders: OrderEntity[]) {
@@ -214,5 +147,81 @@ export class OrdersService {
                 pending: 0,
             },
         );
+    }
+
+    private hydrate(orders: OrderEntity[], include: Include[]): OrderEntity[] {
+        if (orders.length === 0) {
+            return orders;
+        }
+
+        if (include.includes('gig')) {
+            orders.forEach((order) => {
+                const gig = this.gigsService.findOne(order.gigId, ['tags']);
+                if (gig) {
+                    order.gig = {
+                        id: gig.id,
+                        title: gig.title,
+                        description: gig.description,
+                        thumbnail: gig.thumbnail,
+                        deliveryDays: gig.deliveryDays,
+                    };
+                }
+            });
+        }
+
+        if (include.includes('client')) {
+            orders.forEach((order) => {
+                const client = this.usersService.publicUser(order.clientId);
+                if (client) {
+                    order.client = {
+                        id: client.id,
+                        name: client.name ?? '',
+                        avatar: client.avatar ?? '',
+                        email: client.email,
+                    };
+                }
+            });
+        }
+
+        if (include.includes('freelancer')) {
+            orders.forEach((order) => {
+                const freelancer = this.usersService.publicUser(order.freelancerId);
+                if (freelancer) {
+                    order.freelancer = {
+                        id: freelancer.id,
+                        name: freelancer.name ?? '',
+                        avatar: freelancer.avatar ?? '',
+                        email: freelancer.email,
+                    };
+                }
+            });
+        }
+
+        return orders;
+    }
+
+    private toOrder(row: OrderRow): OrderEntity {
+        return {
+            id: row.id,
+            gigId: row.gig_id,
+            gig: undefined as any,
+            clientId: row.client_id,
+            client: undefined as any,
+            freelancerId: row.freelancer_id,
+            freelancer: undefined as any,
+            status: row.status,
+            price: row.price,
+            requirements: row.requirements,
+            createdAt: row.created_at,
+            deliveryDeadline: row.delivery_deadline,
+        };
+    }
+
+    private createId(): string {
+        return `o_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    private db() {
+        return this.database.connection();
     }
 }
