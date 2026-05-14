@@ -41,9 +41,9 @@ export class GigsController {
       throw new BadRequestException('Missing required gig fields');
     }
 
-    if (payload.title.length < 40 || payload.title.length > 80) {
+    if (payload.title.length < 10 || payload.title.length > 80) {
       throw new BadRequestException(
-        'Title must be between 40 and 80 characters',
+        'Title must be between 10 and 80 characters',
       );
     }
 

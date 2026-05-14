@@ -11,7 +11,7 @@ export type GigCategory =
   | "Video Editing"
   | "Photo Editing"
   | "Audio & Voice"
-
+  | string
 export interface User {
   id: string
   name: string

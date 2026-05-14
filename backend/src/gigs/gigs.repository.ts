@@ -18,7 +18,7 @@ type GigRow = {
 
 @Injectable()
 export class GigsRepository {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(private readonly database: DatabaseService) { }
 
   create(gig: GigEntity, tags: string[]): void {
     const db = this.database.connection();
@@ -95,7 +95,7 @@ export class GigsRepository {
   ): void {
     const db = this.database.connection();
     const update = db.transaction(() => {
-      db.prepare(
+      const result = db.prepare(
         `
             UPDATE gigs
             SET title = @title,
@@ -110,7 +110,7 @@ export class GigsRepository {
         `,
       ).run({ id, ...data });
 
-      if (tags !== undefined) {
+      if (tags !== undefined && result.changes > 0) {
         this.replaceTags(id, tags);
       }
     });
@@ -189,17 +189,17 @@ export class GigsRepository {
         `,
       )
       .all(...uniqueIds) as Array<{
-      id: string;
-      order_id: string;
-      gig_id: string;
-      author_id: string;
-      author_name: string;
-      author_avatar: string;
-      author_email: string;
-      rating: number;
-      comment: string;
-      created_at: string;
-    }>;
+        id: string;
+        order_id: string;
+        gig_id: string;
+        author_id: string;
+        author_name: string;
+        author_avatar: string;
+        author_email: string;
+        rating: number;
+        comment: string;
+        created_at: string;
+      }>;
 
     return rows.map((row) => ({
       gigId: row.gig_id,
@@ -219,16 +219,29 @@ export class GigsRepository {
     const db = this.database.connection();
     db.prepare('DELETE FROM gig_tags WHERE gig_id = ?').run(gigId);
 
+    const findTag = db.prepare('SELECT id FROM tags WHERE LOWER(name) = LOWER(?)');
     const insertTag = db.prepare(
-      'INSERT OR IGNORE INTO tags (id, name) VALUES (?, ?)',
+      'INSERT INTO tags (id, name) VALUES (?, ?)',
     );
     const insertGigTag = db.prepare(
       'INSERT OR IGNORE INTO gig_tags (gig_id, tag_id) VALUES (?, ?)',
     );
 
     tags.forEach((name) => {
-      const tagId = this.tagId(name);
-      insertTag.run(tagId, name);
+      let tagId;
+      const existing = findTag.get(name) as { id: string } | undefined;
+      if (existing) {
+        tagId = existing.id;
+      } else {
+        tagId = this.tagId(name);
+        try {
+          insertTag.run(tagId, name);
+        } catch (e) {
+          // In case of any weird race condition or unhandled collision
+          const retry = findTag.get(name) as { id: string } | undefined;
+          if (retry) tagId = retry.id;
+        }
+      }
       insertGigTag.run(gigId, tagId);
     });
   }

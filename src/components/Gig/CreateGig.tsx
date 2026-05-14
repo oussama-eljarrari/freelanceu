@@ -5,6 +5,7 @@ import { api } from "@/api/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Image, DollarSign, Clock, Tag, AlignLeft, Sparkles } from "lucide-react";
+import { GigCard } from "../Home-page/GigCard";
 
 export default function CreateGigPage() {
   const { user, isAuthenticated } = useAuth();
@@ -28,8 +29,8 @@ export default function CreateGigPage() {
     .filter(tag => tag.length > 0);
 
   // Form validation check
-  const isFormValid = 
-    title.trim().length >= 10 && 
+  const isFormValid =
+    title.trim().length >= 10 &&
     title.length <= 80 &&
     description.trim().length > 0 &&
     category &&
@@ -154,7 +155,7 @@ export default function CreateGigPage() {
                 <p className="text-sm font-medium text-red-900">{error}</p>
               </div>
             )}
-            
+
             {/* Section 1: Service Basics */}
             <Card className="border border-border/60 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b">
@@ -170,13 +171,12 @@ export default function CreateGigPage() {
                     type="text"
                     required
                     placeholder="Ex: I will design a professional logo for your brand"
-                    className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
-                      title.length >= 10 && title.length <= 80
+                    className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${title.length >= 10 && title.length <= 80
                         ? 'border-input bg-background focus-visible:ring-primary'
                         : title.length > 0
-                        ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
-                        : 'border-input bg-background focus-visible:ring-primary'
-                    }`}
+                          ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                          : 'border-input bg-background focus-visible:ring-primary'
+                      }`}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
@@ -256,13 +256,12 @@ export default function CreateGigPage() {
                         min="5"
                         required
                         placeholder="50"
-                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
-                          price && Number(price) >= 5
+                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${price && Number(price) >= 5
                             ? 'border-input bg-background focus-visible:ring-primary'
                             : price && Number(price) < 5
-                            ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
-                            : 'border-input bg-background focus-visible:ring-primary'
-                        }`}
+                              ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                              : 'border-input bg-background focus-visible:ring-primary'
+                          }`}
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                       />
@@ -282,13 +281,12 @@ export default function CreateGigPage() {
                         min="1"
                         required
                         placeholder="3"
-                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
-                          deliveryDays && Number(deliveryDays) >= 1
+                        className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${deliveryDays && Number(deliveryDays) >= 1
                             ? 'border-input bg-background focus-visible:ring-primary'
                             : deliveryDays && Number(deliveryDays) < 1
-                            ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
-                            : 'border-input bg-background focus-visible:ring-primary'
-                        }`}
+                              ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
+                              : 'border-input bg-background focus-visible:ring-primary'
+                          }`}
                         value={deliveryDays}
                         onChange={(e) => setDeliveryDays(e.target.value)}
                       />
@@ -360,112 +358,36 @@ export default function CreateGigPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Sidebar: Preview */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-6">
-              {/* Preview Card */}
-              <Card className="border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent shadow-md overflow-hidden">
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-base">Aperçu de votre Gig</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Thumbnail Preview */}
-                  <div className="relative h-40 w-full rounded-lg overflow-hidden bg-muted border border-border/50">
-                    {thumbnail ? (
-                      <img
-                        src={thumbnail}
-                        alt="preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "https://picsum.photos/seed/default/300/200";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Image className="w-12 h-12 text-muted-foreground/40" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title Preview */}
-                  {title && (
-                    <div>
-                      <p className="text-sm font-semibold text-foreground line-clamp-2">{title}</p>
-                    </div>
-                  )}
-
-                  {/* Category Badge */}
-                  {category && (
-                    <div>
-                      <span className="inline-block rounded-full bg-muted px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                        {category}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Price */}
-                  {price && (
-                    <div className="flex items-center justify-between pt-2 border-t border-border/50">
-                      <span className="text-xs font-medium text-muted-foreground">Prix</span>
-                      <span className="text-lg font-bold text-primary">${price}</span>
-                    </div>
-                  )}
-
-                  {/* Delivery */}
-                  {deliveryDays && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">Livraison</span>
-                      <span className="text-sm font-semibold text-foreground">{deliveryDays}j</span>
-                    </div>
-                  )}
-
-                  {/* Tags Preview */}
-                  {tagsArray.length > 0 && (
-                    <div className="pt-2 border-t border-border/50">
-                      <div className="flex flex-wrap gap-1.5">
-                        {tagsArray.slice(0, 3).map((tag, idx) => (
-                          <span key={idx} className="inline-block rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
-                            {tag}
-                          </span>
-                        ))}
-                        {tagsArray.length > 3 && (
-                          <span className="inline-block rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                            +{tagsArray.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Submit Button */}
+            <div className="pt-4">
               <Button
                 type="submit"
+                className="w-full h-12 text-base font-semibold"
                 disabled={isSubmitting || !isFormValid}
-                size="lg"
-                className="w-full h-12 rounded-lg font-semibold text-base"
               >
-                {isSubmitting ? "Création en cours..." : !isFormValid ? "Complétez tous les champs" : "Publier le Gig"}
+                {isSubmitting ? "Création en cours..." : !isFormValid ? "Complétez tous les champs" : "Publier mon Gig"}
               </Button>
-
-              {/* Info Box */}
-              <Card className="border border-border/40 bg-background/50">
-                <CardContent className="pt-4">
-                  <div className="space-y-2 text-xs">
-                    <p className="font-semibold text-foreground">💡 Conseils</p>
-                    <ul className="space-y-1.5 text-muted-foreground">
-                      <li>• Soyez précis et détaillé</li>
-                      <li>• Utilisez des tags pertinents</li>
-                      <li>• Mettez un prix compétitif</li>
-                      <li>• Ajoutez une image attractive</li>
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
+          </div>
+
+          <div className="h-fit lg:sticky lg:top-50">
+            <GigCard gig={{
+              // En conditions réelles, l'ID, la date et les stats sont générés par le backend
+              id: `g_${Math.random().toString(36).substr(2, 9)}`,
+              sellerId: user?.id!,
+              seller: user!,
+              // On ne passe généralement pas l'objet 'seller' entier à la création, le backend le fera
+              title,
+              description,
+              category,
+              price: Number(price),
+              deliveryDays: Number(deliveryDays),
+              rating: 0,
+              totalReviews: 0,
+              thumbnail: thumbnail || "https://picsum.photos/seed/default/400/300",
+              tags: tagsArray,
+              createdAt: new Date().toISOString().split('T')[0],
+            }} />
           </div>
         </form>
       </div>
