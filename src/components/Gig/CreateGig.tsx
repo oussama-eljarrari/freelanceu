@@ -29,7 +29,7 @@ export default function CreateGigPage() {
 
   // Form validation check
   const isFormValid = 
-    title.trim().length >= 40 && 
+    title.trim().length >= 10 && 
     title.length <= 80 &&
     description.trim().length > 0 &&
     category &&
@@ -57,7 +57,7 @@ export default function CreateGigPage() {
       return;
     }
 
-    if (title.length < 40) {
+    if (title.length < 10) {
       setError(`Le titre doit contenir au moins 40 caractères (actuellement: ${title.length})`);
       return;
     }
@@ -171,7 +171,7 @@ export default function CreateGigPage() {
                     required
                     placeholder="Ex: I will design a professional logo for your brand"
                     className={`flex h-11 w-full rounded-lg border px-4 py-2 text-sm placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:border-transparent transition-all ${
-                      title.length >= 40 && title.length <= 80
+                      title.length >= 10 && title.length <= 80
                         ? 'border-input bg-background focus-visible:ring-primary'
                         : title.length > 0
                         ? 'border-red-300 bg-red-50 focus-visible:ring-red-400'
@@ -181,8 +181,8 @@ export default function CreateGigPage() {
                     onChange={(e) => setTitle(e.target.value)}
                   />
                   <div className="flex justify-between text-xs">
-                    <p className="text-muted-foreground">Minimum 40 caractères - maximum 80 caractères</p>
-                    <p className={title.length >= 40 && title.length <= 80 ? 'text-green-600 font-medium' : title.length > 0 && (title.length < 40 || title.length > 80) ? 'text-red-600 font-medium' : 'text-muted-foreground'}>
+                    <p className="text-muted-foreground">Minimum 10 caractères - maximum 80 caractères</p>
+                    <p className={title.length >= 10 && title.length <= 80 ? 'text-green-600 font-medium' : title.length > 0 && (title.length < 10 || title.length > 80) ? 'text-red-600 font-medium' : 'text-muted-foreground'}>
                       {title.length}/80
                     </p>
                   </div>

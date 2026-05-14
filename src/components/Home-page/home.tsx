@@ -32,7 +32,7 @@ export function HomePage() {
     const fetchBackendGigs = async () => {
       try {
         setLoading(true)
-        const response = await api.get<{ data: Gig[] }>('/gigs?include=seller,tags')
+        const response = await api.get<{ data: Gig[] }>('/gigs?include=seller,tags,reviews')
         if (response?.data) {
           // Filter out gigs that are already in mockGigs (by checking if they're backend-generated IDs)
           setBackendGigs(response.data.filter(gig => gig.sellerId !== user?.id))

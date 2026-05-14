@@ -5,24 +5,24 @@ import { dirname, join } from 'node:path';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
-    private readonly databasePath = join(process.cwd(), 'data', 'freelanceu.db');
-    private db: Database.Database;
+  private readonly databasePath = join(process.cwd(), 'data', 'freelanceu.db');
+  private db: Database.Database;
 
-    onModuleInit() {
-        const directory = dirname(this.databasePath);
-        if (!existsSync(directory)) {
-            mkdirSync(directory, { recursive: true });
-        }
-
-        this.db = new Database(this.databasePath);
-        this.db.pragma('foreign_keys = ON');
+  onModuleInit() {
+    const directory = dirname(this.databasePath);
+    if (!existsSync(directory)) {
+      mkdirSync(directory, { recursive: true });
     }
 
-    onModuleDestroy() {
-        this.db?.close();
-    }
+    this.db = new Database(this.databasePath);
+    this.db.pragma('foreign_keys = ON');
+  }
 
-    connection(): Database.Database {
-        return this.db;
-    }
+  onModuleDestroy() {
+    this.db?.close();
+  }
+
+  connection(): Database.Database {
+    return this.db;
+  }
 }
