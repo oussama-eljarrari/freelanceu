@@ -26,11 +26,14 @@ export function App() {
           <Route path="/gig/:id" element={<GigDetailPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/messages" element={<MessagesPage />} />
           <Route path="/gig/create" element={<CreateGigPage />} />
           
+          <Route element={<Protected adminOnly />} >
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
+        
         </Route>
 
       </Route>

@@ -22,7 +22,7 @@ import { GigsService } from './gigs.service';
 @UseGuards(AuthGuard)
 export class GigsController {
   constructor(private readonly gigsService: GigsService) {}
-
+  
   @Post()
   create(@Body() payload: CreateGigDto, @CurrentUser() user: any) {
     const requiredFields = [

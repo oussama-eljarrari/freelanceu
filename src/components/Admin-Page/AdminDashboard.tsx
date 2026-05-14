@@ -12,9 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useEffect, useState } from "react"
-import { api } from "@/api/client"
-import { Gig, Order, User } from "@/types"
 import { useAdminDashboard } from "./useAdminDashboard"
 
 export function AdminDashboard() {

@@ -17,11 +17,11 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewsService } from './reviews.service';
 
 @Controller('reviews')
+@UseGuards(AuthGuard)
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Post()
-  @UseGuards(AuthGuard)
   create(@Body() payload: CreateReviewDto, @CurrentUser() user: any) {
     if (!payload.gigId || payload.rating === undefined || !payload.comment) {
       throw new BadRequestException('Missing required review fields');
@@ -72,7 +72,6 @@ export class ReviewsController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard)
   delete(@Param('id') id: string, @CurrentUser() user: any) {
     const review = this.reviewsService.findOne(id);
 

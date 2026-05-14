@@ -11,18 +11,17 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CurrentUser } from 'src/auth/current-user.decorator';
+import { AdminGuard } from 'src/auth/admin.guard';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
-// For admin to view all users
+  // For admin to view all users
   @Get()
+  @UseGuards(AdminGuard)
   findAll(@CurrentUser() user) {
-    if (user.role !== 'admin') {
-      return { message: 'Unauthorized' };
-    }
     return this.usersService.findAll().map(({ password, ...user }) => user);
   }
 
@@ -37,7 +36,6 @@ export class UsersController {
   }
 
   @Patch('profile')
-  @UseGuards(AuthGuard)
   updateProfile(@Body() updateUserDto: UpdateUserDto, @Session() session) {
     const updatedUser = this.usersService.update(
       session.user.id,
