@@ -1,93 +1,98 @@
 import {
-    BadRequestException,
-    Body,
-    Controller,
-    Delete,
-    Get,
-    NotFoundException,
-    Param,
-    Post,
-    Query,
-    Session,
-    UnauthorizedException,
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+  UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { ReviewsService } from './reviews.service';
 
 @Controller('reviews')
+@UseGuards(AuthGuard)
 export class ReviewsController {
-    constructor(private readonly reviewsService: ReviewsService) { }
+  constructor(private readonly reviewsService: ReviewsService) {}
 
-    @Post()
-    create(@Body() payload: CreateReviewDto, @Session() session: any) {
-        const user = session?.user;
-
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to leave a review');
-        }
-
-        if (!payload.gigId || payload.rating === undefined || !payload.comment) {
-            throw new BadRequestException('Missing required review fields');
-        }
-
-        if (payload.rating < 1 || payload.rating > 5) {
-            throw new BadRequestException('Rating must be between 1 and 5');
-        }
-
-        if (payload.comment.trim().length < 10) {
-            throw new BadRequestException('Comment must be at least 10 characters');
-        }
-
-        const review = this.reviewsService.create(payload, user);
-        return { message: 'Review created successfully', data: review };
+  @Post()
+  create(@Body() payload: CreateReviewDto, @CurrentUser() user: any) {
+    if (!payload.gigId || payload.rating === undefined || !payload.comment) {
+      throw new BadRequestException('Missing required review fields');
     }
 
-    @Get('gig/:gigId')
-    findByGigId(@Param('gigId') gigId: string, @Query('include') include?: string) {
-        const reviews = this.reviewsService.findByGigId(gigId, parseInclude(include) as any);
-        return { data: reviews };
+    if (payload.rating < 1 || payload.rating > 5) {
+      throw new BadRequestException('Rating must be between 1 and 5');
     }
 
-    @Get()
-    findAll(@Query('include') include?: string) {
-        const reviews = this.reviewsService.findAll(parseInclude(include) as any);
-        return { data: reviews };
+    if (payload.comment.trim().length < 10) {
+      throw new BadRequestException('Comment must be at least 10 characters');
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string, @Query('include') include?: string) {
-        const review = this.reviewsService.findOne(id, parseInclude(include) as any);
+    const review = this.reviewsService.create(payload, user);
+    return { message: 'Review created successfully', data: review };
+  }
 
-        if (!review) {
-            throw new NotFoundException('Review not found');
-        }
+  @Get('gig/:gigId')
+  findByGigId(
+    @Param('gigId') gigId: string,
+    @Query('include') include?: string,
+  ) {
+    const reviews = this.reviewsService.findByGigId(
+      gigId,
+      parseInclude(include) as any,
+    );
+    return { data: reviews };
+  }
 
-        return { data: review };
+  @Get()
+  findAll(@Query('include') include?: string) {
+    const reviews = this.reviewsService.findAll(parseInclude(include) as any);
+    return { data: reviews };
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @Query('include') include?: string) {
+    const review = this.reviewsService.findOne(
+      id,
+      parseInclude(include) as any,
+    );
+
+    if (!review) {
+      throw new NotFoundException('Review not found');
     }
 
-    @Delete(':id')
-    delete(@Param('id') id: string, @Session() session: any) {
-        const user = session?.user;
+    return { data: review };
+  }
 
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to delete a review');
-        }
+  @Delete(':id')
+  delete(@Param('id') id: string, @CurrentUser() user: any) {
+    const review = this.reviewsService.findOne(id);
 
-        const review = this.reviewsService.findOne(id);
-
-        if (!review) {
-            throw new NotFoundException('Review not found');
-        }
-
-        if (review.authorId !== user.id) {
-            throw new UnauthorizedException('You can only delete your own reviews');
-        }
-
-        this.reviewsService.delete(id);
-        return { message: 'Review deleted successfully' };
+    if (!review) {
+      throw new NotFoundException('Review not found');
     }
+
+    if (review.authorId !== user.id) {
+      throw new UnauthorizedException('You can only delete your own reviews');
+    }
+
+    this.reviewsService.delete(id);
+    return { message: 'Review deleted successfully' };
+  }
 }
 
 function parseInclude(include?: string): string[] {
-    return include?.split(',').map((item) => item.trim()).filter(Boolean) ?? [];
+  return (
+    include
+      ?.split(',')
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
 }

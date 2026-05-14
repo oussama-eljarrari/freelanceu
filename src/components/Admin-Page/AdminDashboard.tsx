@@ -1,4 +1,3 @@
-import { mockUsers, mockGigs, mockOrders } from "@/mocks"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, LayoutList, ShoppingCart, Trash2 } from "lucide-react"
@@ -13,13 +12,19 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAdminDashboard } from "./useAdminDashboard"
 
 export function AdminDashboard() {
+
+  const { users, gigs, orders } = useAdminDashboard() 
+
+
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-     
+
       <div className="container mx-auto max-w-7xl p-6 space-y-8">
-        
+
         <div className="flex flex-col space-y-2">
           <h1 className="text-3xl font-bold tracking-tight font-heading">Admin Overview</h1>
           <p className="text-muted-foreground font-sans">Manage users, moderate gigs, and monitor platform activity.</p>
@@ -34,7 +39,7 @@ export function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-heading">{mockUsers.length}</div>
+              <div className="text-2xl font-bold font-heading">{users.length}</div>
             </CardContent>
           </Card>
           <Card className="shadow-sm border-border/50">
@@ -45,7 +50,7 @@ export function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-heading">{mockGigs.length}</div>
+              <div className="text-2xl font-bold font-heading">{gigs.length}</div>
             </CardContent>
           </Card>
           <Card className="shadow-sm border-border/50">
@@ -56,7 +61,7 @@ export function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold font-heading">{mockOrders.length}</div>
+              <div className="text-2xl font-bold font-heading">{orders.length}</div>
             </CardContent>
           </Card>
         </div>
@@ -86,7 +91,7 @@ export function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockUsers.map((user) => (
+                    {users.map((user) => (
                       <TableRow key={user.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -129,7 +134,7 @@ export function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockGigs.map((gig) => (
+                    {gigs.map((gig) => (
                       <TableRow key={gig.id}>
                         <TableCell className="font-medium line-clamp-1">{gig.title}</TableCell>
                         <TableCell><Badge variant="secondary">{gig.category}</Badge></TableCell>
@@ -167,7 +172,7 @@ export function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockOrders.map((order) => (
+                    {orders.map((order) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-mono text-xs text-muted-foreground">{order.id.toUpperCase()}</TableCell>
                         <TableCell className="font-medium max-w-[200px] truncate">{order.gig.title}</TableCell>

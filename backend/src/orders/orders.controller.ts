@@ -1,108 +1,138 @@
-import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Patch, Post, Query, Session, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersService } from './orders.service';
 import { OrderStatus } from './entities/order.entity';
 
 @Controller('orders')
+@UseGuards(AuthGuard)
 export class OrdersController {
-    constructor(private readonly ordersService: OrdersService) { }
+  constructor(private readonly ordersService: OrdersService) {}
 
-    @Post()
-    create(@Body() payload: CreateOrderDto, @Session() session: any) {
-        const user = session?.user;
+  @Post()
+  @UseGuards(AuthGuard)
+  create(@Body() payload: CreateOrderDto, @CurrentUser() user: any) {
+    const requiredFields = [
+      payload.gigId,
+      payload.freelancerId,
+      payload.price,
+      payload.requirements,
+    ];
 
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to create an order');
-        }
-
-        const requiredFields = [
-            payload.gigId,
-            payload.freelancerId,
-            payload.price,
-            payload.requirements,
-        ];
-
-        if (requiredFields.some((value) => value === undefined || value === null || value === '')) {
-            throw new BadRequestException('Missing required order fields');
-        }
-
-        const data = this.ordersService.create(payload, user);
-        if (!data) {
-            throw new BadRequestException('Invalid order references');
-        }
-        return { message: 'Order created', data };
+    if (
+      requiredFields.some(
+        (value) => value === undefined || value === null || value === '',
+      )
+    ) {
+      throw new BadRequestException('Missing required order fields');
     }
 
-    @Get()
-    findAll(@Session() session: any, @Query('include') include?: string) {
-        const user = session?.user;
+    const data = this.ordersService.create(payload, user);
+    if (!data) {
+      throw new BadRequestException('Invalid order references');
+    }
+    return { message: 'Order created', data };
+  }
 
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to view orders');
-        }
+  @Get()
+  @UseGuards(AuthGuard)
+  findAll(@CurrentUser() user: any, @Query('include') include?: string) {
+    const data = this.ordersService.findForUser(
+      user,
+      parseInclude(include) as any,
+    );
+    return { data, stats: this.ordersService.getStatusCounts(data) };
+  }
 
-        const data = this.ordersService.findForUser(user, parseInclude(include) as any);
-        return { data, stats: this.ordersService.getStatusCounts(data) };
+  @Get(':id')
+  @UseGuards(AuthGuard)
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser() user: any,
+    @Query('include') include?: string,
+  ) {
+    const order = this.ordersService.findOne(id, parseInclude(include) as any);
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
     }
 
-    @Get(':id')
-    findOne(@Param('id') id: string, @Session() session: any, @Query('include') include?: string) {
-        const user = session?.user;
-
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to view orders');
-        }
-
-        const order = this.ordersService.findOne(id, parseInclude(include) as any);
-
-        if (!order) {
-            throw new NotFoundException('Order not found');
-        }
-
-        if (user.role !== 'admin' && order.clientId !== user.id && order.freelancerId !== user.id) {
-            throw new UnauthorizedException('You cannot access this order');
-        }
-
-        return { data: order };
+    if (
+      user.role !== 'admin' &&
+      order.clientId !== user.id &&
+      order.freelancerId !== user.id
+    ) {
+      throw new UnauthorizedException('You cannot access this order');
     }
 
-    @Patch(':id')
-    update(@Param('id') id: string, @Body() payload: UpdateOrderDto, @Session() session: any) {
-        const user = session?.user;
+    return { data: order };
+  }
+  @Patch(':id')
+  @UseGuards(AuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() payload: UpdateOrderDto,
+    @CurrentUser() user: any,
+  ) {
+    const order = this.ordersService.findOne(id);
 
-        if (!user) {
-            throw new UnauthorizedException('You must be signed in to update orders');
-        }
-
-        const order = this.ordersService.findOne(id);
-
-        if (!order) {
-            throw new NotFoundException('Order not found');
-        }
-
-        if (user.role !== 'admin' && order.freelancerId !== user.id) {
-            throw new UnauthorizedException('Only the assigned freelancer can update this order');
-        }
-
-        if (payload.status && !this.isValidStatus(payload.status)) {
-            throw new BadRequestException('Invalid order status');
-        }
-
-        const data = this.ordersService.update(id, payload, ['gig', 'client', 'freelancer'] as any);
-
-        if (!data) {
-            throw new NotFoundException('Order not found');
-        }
-
-        return { message: 'Order updated', data };
+    if (!order) {
+      throw new NotFoundException('Order not found');
     }
 
-    private isValidStatus(status: string): status is OrderStatus {
-        return ['pending', 'in_progress', 'delivered', 'completed', 'cancelled'].includes(status);
+    if (user.role !== 'admin' && order.freelancerId !== user.id) {
+      throw new UnauthorizedException(
+        'Only the assigned freelancer can update this order',
+      );
     }
+
+    if (payload.status && !this.isValidStatus(payload.status)) {
+      throw new BadRequestException('Invalid order status');
+    }
+
+    const data = this.ordersService.update(id, payload, [
+      'gig',
+      'client',
+      'freelancer',
+    ] as any);
+
+    if (!data) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return { message: 'Order updated', data };
+  }
+
+  private isValidStatus(status: string): status is OrderStatus {
+    return [
+      'pending',
+      'in_progress',
+      'delivered',
+      'completed',
+      'cancelled',
+    ].includes(status);
+  }
 }
 
 function parseInclude(include?: string): string[] {
-    return include?.split(',').map((item) => item.trim()).filter(Boolean) ?? [];
+  return (
+    include
+      ?.split(',')
+      .map((item) => item.trim())
+      .filter(Boolean) ?? []
+  );
 }

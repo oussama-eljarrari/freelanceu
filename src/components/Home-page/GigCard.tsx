@@ -70,7 +70,7 @@ export function GigCard({ gig }: GigCardProps) {
                     <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-semibold text-foreground">
-                            {gig.rating}
+                            {gig.rating.toFixed(1)}
                         </span>
                         <span className="text-sm text-muted-foreground">
                             ({gig.totalReviews} reviews)

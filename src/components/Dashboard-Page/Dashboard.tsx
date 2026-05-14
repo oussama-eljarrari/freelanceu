@@ -37,12 +37,19 @@ export function DashboardPage() {
         setIsLoading(false)
       }
     }
+
+   
+
+
     fetchOrders()
   }, [])
 
-  const freelancerOrders = orders.filter(o => o.freelancerId === user?.id)
-  const completedOrders = freelancerOrders.filter(o => o.status === "completed")
-  const activeOrders = freelancerOrders.filter(o => o.status === "in_progress")
+  
+  const completedOrders = orders.filter(o => o.status === "completed")
+  const activeOrders = orders.filter(o => o.status === "in_progress")
+
+  console.log("Completed Orders:", completedOrders)
+  console.log("Active Orders:", activeOrders)
 
   const totalEarnings = completedOrders.reduce((sum, o) => sum + o.price, 0)
   const stats = {
@@ -98,7 +105,7 @@ export function DashboardPage() {
           <Button onClick={() => navigate("/profile")}>View Public Profile <ArrowRight className="ml-2 h-4 w-4" /></Button>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card className="shadow-sm border-border/50">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
@@ -132,21 +139,10 @@ export function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold font-heading">{stats.completedOrders}</div>
-              <p className="text-xs text-muted-foreground mt-1">{completedOrders.length + activeOrders.length + freelancerOrders.filter(o => o.status === "pending" || o.status === "delivered").length} total lifetime orders</p>
+              <p className="text-xs text-muted-foreground mt-1">{completedOrders.length + activeOrders.length + orders.filter(o => o.status === "pending" || o.status === "delivered").length} total lifetime orders</p>
             </CardContent>
           </Card>
-          <Card className="shadow-sm border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Avg. Rating</CardTitle>
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Star className="h-4 w-4 text-primary" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold font-heading">{stats.averageRating}</div>
-              <p className="text-xs text-muted-foreground mt-1">Based on {user?.totalReviews} reviews</p>
-            </CardContent>
-          </Card>
+          
         </div>
 
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">

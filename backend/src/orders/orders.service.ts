@@ -1,227 +1,208 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
 import { GigsService } from 'src/gigs/gigs.service';
 import { UsersService } from 'src/users/users.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity, OrderStatus } from './entities/order.entity';
+import { OrdersRepository } from './orders.repository';
 
 type SessionUser = {
-    id: string;
-    name: string;
-    avatar: string;
-    email?: string;
-    role?: string;
-};
-
-type OrderRow = {
-    id: string;
-    gig_id: string;
-    client_id: string;
-    freelancer_id: string;
-    status: OrderStatus;
-    price: number;
-    requirements: string;
-    delivery_deadline: string;
-    created_at: string;
+  id: string;
+  name: string;
+  avatar: string;
+  email?: string;
+  role?: string;
 };
 
 type Include = 'gig' | 'client' | 'freelancer';
 
 @Injectable()
 export class OrdersService {
-    constructor(
-        private readonly database: DatabaseService,
-        private readonly gigsService: GigsService,
-        private readonly usersService: UsersService,
-    ) {}
+  constructor(
+    private readonly ordersRepository: OrdersRepository,
+    private readonly gigsService: GigsService,
+    private readonly usersService: UsersService,
+  ) {}
 
-    findAll(include: Include[] = []): OrderEntity[] {
-        const rows = this.db().prepare('SELECT * FROM orders ORDER BY created_at DESC').all() as OrderRow[];
-        return this.hydrate(rows.map((row) => this.toOrder(row)), include);
+  findAll(include: Include[] = []): OrderEntity[] {
+    return this.hydrate(this.ordersRepository.findAll(), include);
+  }
+
+  findOne(id: string, include: Include[] = []): OrderEntity | undefined {
+    const order = this.ordersRepository.findById(id);
+    if (!order) {
+      return undefined;
     }
 
-    findOne(id: string, include: Include[] = []): OrderEntity | undefined {
-        const row = this.db().prepare('SELECT * FROM orders WHERE id = ?').get(id) as OrderRow | undefined;
-        if (!row) {
-            return undefined;
+    return this.hydrate([order], include)[0];
+  }
+
+  findForUser(user: SessionUser, include: Include[] = []): OrderEntity[] {
+    const orders =
+      user.role === 'admin'
+        ? this.ordersRepository.findAll()
+        : this.ordersRepository.findForUser(user.id);
+
+    return this.hydrate(orders, include);
+  }
+
+  create(payload: CreateOrderDto, client: SessionUser): OrderEntity {
+    const gig = this.gigsService.findOne(payload.gigId);
+    if (!gig) {
+      return null as any;
+    }
+
+    const freelancerId = payload.freelancerId || gig.sellerId;
+    const users = this.usersService.publicUsers([freelancerId, client.id]);
+    const freelancer = users.find((user) => user.id === freelancerId);
+    const clientUser = users.find((user) => user.id === client.id);
+    if (!freelancer || !clientUser) {
+      return null as any;
+    }
+
+    const createdAt = new Date().toISOString();
+    const deliveryDays = payload.deliveryDays ?? gig.deliveryDays;
+    const deliveryDeadline =
+      payload.deliveryDeadline ??
+      new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000).toISOString();
+
+    const order = {
+      id: this.createId(),
+      gigId: gig.id,
+      clientId: client.id,
+      freelancerId,
+      status: 'pending' as OrderStatus,
+      price: payload.price ?? gig.price,
+      requirements: payload.requirements,
+      createdAt,
+      deliveryDeadline,
+      gig: undefined as any,
+      client: undefined as any,
+      freelancer: undefined as any,
+    };
+
+    this.ordersRepository.create(order);
+
+    return this.findOne(order.id, [
+      'gig',
+      'client',
+      'freelancer',
+    ]) as OrderEntity;
+  }
+
+  update(
+    id: string,
+    payload: UpdateOrderDto,
+    include: Include[] = [],
+  ): OrderEntity | null {
+    const order = this.findOne(id);
+    if (!order) {
+      return null;
+    }
+
+    this.ordersRepository.update(id, {
+      status: payload.status ?? order.status,
+      requirements: payload.requirements ?? order.requirements,
+      deliveryDeadline: payload.deliveryDeadline ?? order.deliveryDeadline,
+      price: payload.price ?? order.price,
+    });
+
+    return this.findOne(id, include) ?? null;
+  }
+
+  getStatusCounts(orders: OrderEntity[]) {
+    return orders.reduce(
+      (acc, order) => {
+        if (order.status === 'completed' || order.status === 'delivered') {
+          acc.completed += 1;
         }
 
-        return this.hydrate([this.toOrder(row)], include)[0];
-    }
-
-    findForUser(user: SessionUser, include: Include[] = []): OrderEntity[] {
-        const rows = user.role === 'admin'
-            ? this.db().prepare('SELECT * FROM orders ORDER BY created_at DESC').all()
-            : this.db().prepare(`
-                SELECT * FROM orders
-                WHERE client_id = ? OR freelancer_id = ?
-                ORDER BY created_at DESC
-            `).all(user.id, user.id);
-
-        return this.hydrate((rows as OrderRow[]).map((row) => this.toOrder(row)), include);
-    }
-
-    create(payload: CreateOrderDto, client: SessionUser): OrderEntity {
-        const gig = this.gigsService.findOne(payload.gigId);
-        if (!gig) {
-            return null as any;
+        if (order.status === 'in_progress') {
+          acc.inProgress += 1;
         }
 
-        const freelancerId = payload.freelancerId || gig.sellerId;
-        const freelancer = this.usersService.findById(freelancerId);
-        const clientUser = this.usersService.findById(client.id);
-        if (!freelancer || !clientUser) {
-            return null as any;
+        if (order.status === 'pending') {
+          acc.pending += 1;
         }
 
-        const createdAt = new Date().toISOString();
-        const deliveryDays = payload.deliveryDays ?? gig.deliveryDays;
-        const deliveryDeadline = payload.deliveryDeadline ?? new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000).toISOString();
+        return acc;
+      },
+      {
+        total: orders.length,
+        completed: 0,
+        inProgress: 0,
+        pending: 0,
+      },
+    );
+  }
 
-        const order = {
-            id: this.createId(),
-            gigId: gig.id,
-            clientId: client.id,
-            freelancerId,
-            status: 'pending' as OrderStatus,
-            price: payload.price ?? gig.price,
-            requirements: payload.requirements,
-            createdAt,
-            deliveryDeadline,
-        };
-
-        this.db().prepare(`
-            INSERT INTO orders (id, gig_id, client_id, freelancer_id, status, price, requirements, delivery_deadline, created_at)
-            VALUES (@id, @gigId, @clientId, @freelancerId, @status, @price, @requirements, @deliveryDeadline, @createdAt)
-        `).run(order);
-
-        return this.findOne(order.id, ['gig', 'client', 'freelancer']) as OrderEntity;
+  private hydrate(orders: OrderEntity[], include: Include[]): OrderEntity[] {
+    if (orders.length === 0) {
+      return orders;
     }
 
-    update(id: string, payload: UpdateOrderDto, include: Include[] = []): OrderEntity | null {
-        const order = this.findOne(id);
-        if (!order) {
-            return null;
+    if (include.includes('gig')) {
+      const gigs = this.gigsService.findByIds(
+        orders.map((order) => order.gigId),
+        ['tags'],
+      );
+
+      orders.forEach((order) => {
+        const gig = gigs.find((row) => row.id === order.gigId);
+        if (gig) {
+          order.gig = {
+            id: gig.id,
+            title: gig.title,
+            description: gig.description,
+            thumbnail: gig.thumbnail,
+            deliveryDays: gig.deliveryDays,
+          };
         }
-
-        this.db().prepare(`
-            UPDATE orders
-            SET status = @status,
-                requirements = @requirements,
-                delivery_deadline = @deliveryDeadline,
-                price = @price
-            WHERE id = @id
-        `).run({
-            id,
-            status: payload.status ?? order.status,
-            requirements: payload.requirements ?? order.requirements,
-            deliveryDeadline: payload.deliveryDeadline ?? order.deliveryDeadline,
-            price: payload.price ?? order.price,
-        });
-
-        return this.findOne(id, include) ?? null;
+      });
     }
 
-    getStatusCounts(orders: OrderEntity[]) {
-        return orders.reduce(
-            (acc, order) => {
-                if (order.status === 'completed' || order.status === 'delivered') {
-                    acc.completed += 1;
-                }
+    if (include.includes('client')) {
+      const clients = this.usersService.publicUsers(
+        orders.map((order) => order.clientId),
+      );
 
-                if (order.status === 'in_progress') {
-                    acc.inProgress += 1;
-                }
+      orders.forEach((order) => {
+        const client = clients.find((row) => row.id === order.clientId);
+        if (client) {
+          order.client = {
+            id: client.id,
+            name: client.name ?? '',
+            avatar: client.avatar ?? '',
+            email: client.email,
+          };
+        }
+      });
+    }
 
-                if (order.status === 'pending') {
-                    acc.pending += 1;
-                }
+    if (include.includes('freelancer')) {
+      const freelancers = this.usersService.publicUsers(
+        orders.map((order) => order.freelancerId),
+      );
 
-                return acc;
-            },
-            {
-                total: orders.length,
-                completed: 0,
-                inProgress: 0,
-                pending: 0,
-            },
+      orders.forEach((order) => {
+        const freelancer = freelancers.find(
+          (row) => row.id === order.freelancerId,
         );
-    }
-
-    private hydrate(orders: OrderEntity[], include: Include[]): OrderEntity[] {
-        if (orders.length === 0) {
-            return orders;
+        if (freelancer) {
+          order.freelancer = {
+            id: freelancer.id,
+            name: freelancer.name ?? '',
+            avatar: freelancer.avatar ?? '',
+            email: freelancer.email,
+          };
         }
-
-        if (include.includes('gig')) {
-            orders.forEach((order) => {
-                const gig = this.gigsService.findOne(order.gigId, ['tags']);
-                if (gig) {
-                    order.gig = {
-                        id: gig.id,
-                        title: gig.title,
-                        description: gig.description,
-                        thumbnail: gig.thumbnail,
-                        deliveryDays: gig.deliveryDays,
-                    };
-                }
-            });
-        }
-
-        if (include.includes('client')) {
-            orders.forEach((order) => {
-                const client = this.usersService.publicUser(order.clientId);
-                if (client) {
-                    order.client = {
-                        id: client.id,
-                        name: client.name ?? '',
-                        avatar: client.avatar ?? '',
-                        email: client.email,
-                    };
-                }
-            });
-        }
-
-        if (include.includes('freelancer')) {
-            orders.forEach((order) => {
-                const freelancer = this.usersService.publicUser(order.freelancerId);
-                if (freelancer) {
-                    order.freelancer = {
-                        id: freelancer.id,
-                        name: freelancer.name ?? '',
-                        avatar: freelancer.avatar ?? '',
-                        email: freelancer.email,
-                    };
-                }
-            });
-        }
-
-        return orders;
+      });
     }
 
-    private toOrder(row: OrderRow): OrderEntity {
-        return {
-            id: row.id,
-            gigId: row.gig_id,
-            gig: undefined as any,
-            clientId: row.client_id,
-            client: undefined as any,
-            freelancerId: row.freelancer_id,
-            freelancer: undefined as any,
-            status: row.status,
-            price: row.price,
-            requirements: row.requirements,
-            createdAt: row.created_at,
-            deliveryDeadline: row.delivery_deadline,
-        };
-    }
+    return orders;
+  }
 
-    private createId(): string {
-        return `o_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    }
-
-    private db() {
-        return this.database.connection();
-    }
+  private createId(): string {
+    return `o_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
 }

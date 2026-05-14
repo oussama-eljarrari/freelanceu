@@ -13,7 +13,7 @@ async function bootstrap() {
       secret: 'my-secret',
       resave: false,
       saveUninitialized: false,
-    })
+    }),
   );
   await app.listen(process.env.PORT ?? 3000);
 }

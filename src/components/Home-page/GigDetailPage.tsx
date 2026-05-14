@@ -25,7 +25,7 @@ export function GigDetailPage() {
 
             try {
                 setLoading(true)
-                const res = await api.get<{ data: any }>(`/gigs/${id}?include=seller,tags`)
+                const res = await api.get<{ data: any }>(`/gigs/${id}?include=seller,tags,reviews`)
                 const fetched = res?.data
                 if (!fetched) {
                     setNotFound(true)
@@ -129,7 +129,7 @@ export function GigDetailPage() {
                             <div className="mt-4 flex items-center gap-3">
                                 <div className="flex items-center gap-1">
                                     <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                                    <span className="text-lg font-semibold text-foreground">{gig.rating}</span>
+                                    <span className="text-lg font-semibold text-foreground">{gig.rating.toFixed(1)}</span>
                                 </div>
                                 <span className="text-muted-foreground">
                                     ({gig.totalReviews} reviews)

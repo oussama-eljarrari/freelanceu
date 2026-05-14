@@ -10,8 +10,16 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { DatabaseModule } from './database/database.module';
 
 @Module({
-  imports: [DatabaseModule, UsersModule, AuthModule, MessagesModule, OrdersModule, GigsModule, ReviewsModule],
+  imports: [
+    DatabaseModule,
+    UsersModule,
+    AuthModule,
+    MessagesModule,
+    OrdersModule,
+    GigsModule,
+    ReviewsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}
